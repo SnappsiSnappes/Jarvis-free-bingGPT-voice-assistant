@@ -1,12 +1,15 @@
 
 def main(conn=None):
     import pvporcupine
+    import configparser
+
     from pvrecorder import PvRecorder
     from rich import print
-
+    config = configparser.ConfigParser()
+    config.read('config.ini')
     keyward_path = r'vosk_+_pvporcupine\отмена_ru_windows_v2_2_0.ppn'
     model_path = r'vosk_+_pvporcupine\porcupine_params_ru.pv'
-    PICOVOICE_TOKEN   = 'Ug3oC9JnZ/w8PQvmXOZvpQhJ3kBUpjkwrmBkqUSHS9zLsJCZ32RqZg=='
+    PICOVOICE_TOKEN   = config.get('PICOVOICE_TOKEN','token')
     porcupine         = pvporcupine.create(
         access_key    = PICOVOICE_TOKEN,
         keyword_paths=[f'{keyward_path}'], 
@@ -17,7 +20,7 @@ def main(conn=None):
 
 
     # VOSK
-    MICROPHONE_INDEX = -1
+    MICROPHONE_INDEX  = int(config.get('MIC','microphone_index'))
     # model            = vosk.Model("model_small")
     # samplerate       = 16000
     # BUFFER_SIZE      = 512                        # Количество байт в буфере записи
