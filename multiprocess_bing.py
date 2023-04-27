@@ -78,7 +78,7 @@ while True:
 
                     conn.send(response) # отправляем ответ в другой процесс
                 except: 
-                    #! try:working_edge_update_cookies();
+                    #! try:working_edge_update_cookies()
                     #! except:continue
 
                     try:         

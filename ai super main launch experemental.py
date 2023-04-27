@@ -178,7 +178,7 @@ async def execute_cmd(cmd: str, voice: str):
         porcupine.delete()
         exit(0)
 
-
+#TODO сделать интерфейс в котором 2 кнопки - запусти(программу), открой(в браузере), скажи шутку(анекдот и тд.)
 
 def replace_numbers_with_words(text):
     # Находим все числа в тексте с помощью регулярного выражения
@@ -470,13 +470,13 @@ async def va_respond(voice: str,conn):
             canceled = False
             # создаем счетчик для алгоритма - корректного озвучивания
             list_of_text.append(voice)
-            
-            #!print('list_of_text=',list_of_text)
+
+            #! print('list_of_text=',list_of_text)
             # создаем задачи
 
             await gpt_answer(voice,conn)
 
-            # !answer_task = asyncio.create_task(gpt_answer(voice,conn))
+            #!answer_task = asyncio.create_task(gpt_answer(voice,conn))
             #########?cancel_task = asyncio.create_task(listen_for_cancel()) #медленная версия
             #cancel_task = asyncio.create_task(vosk_listen_for_cancel())
             # ждем, пока хотя бы одна из задач не завершится
@@ -489,7 +489,6 @@ async def va_respond(voice: str,conn):
             # устанавливаем флаг отмены
             #canceled = True
             # ждем завершения оставшихся задач
-            
             #? await gpt_answer(voice)
             
             # time.sleep(0.5)
