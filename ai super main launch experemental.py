@@ -471,7 +471,7 @@ async def va_respond(voice: str,conn):
             # создаем счетчик для алгоритма - корректного озвучивания
             list_of_text.append(voice)
             
-            print('list_of_text=',list_of_text)
+            #!print('list_of_text=',list_of_text)
             # создаем задачи
 
             await gpt_answer(voice,conn)

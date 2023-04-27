@@ -48,7 +48,7 @@ while True:
         await asyncio.sleep(5)
         if conn.poll(): # проверяем, есть ли данные для чтения
             prompt = conn.recv()
-            print(prompt)
+            #! print(prompt)
             if prompt == "!exit":
                 break
             elif prompt == "!help":
@@ -74,23 +74,18 @@ while True:
                         # ]["body"][0]["text"],
                         #!! end
                     )
-                    print(response)
+                    #! print(response)
 
                     conn.send(response) # отправляем ответ в другой процесс
                 except: 
-                    try:working_edge_update_cookies();
-                    except:pass
+                    #! try:working_edge_update_cookies();
+                    #! except:continue
 
-                    try:                    
+                    try:         
+                        await bot.reset()           
                         response = (
-                        (await bot.ask(prompt=prompt))["item"]["messages"][1]['text'], 
-                        #!! ниже версия с карточками сайтов - ссылками
-                    #   (await bot.ask(prompt=prompt))["item"]["messages"][1]["adaptiveCards"][
-                        #     0
-                        # ]["body"][0]["text"],
-                        #!! end
-                        )
-                        print(response)
+                        (await bot.ask(prompt=prompt))["item"]["messages"][1]['text'])
+                        #! print(response)
                         conn.send(response) # отправляем ответ в другой процесс
                     except: pass
                         
