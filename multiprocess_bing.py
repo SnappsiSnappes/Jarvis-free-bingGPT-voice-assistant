@@ -36,7 +36,8 @@ while True:
         bot = Chatbot(cookie_path='cookies.json')
     except:
         print('Cookies timout, trying to update cookies')
-        working_edge_update_cookies()
+        try:working_edge_update_cookies();
+        except:pass
         try:
 
             bot = Chatbot(cookie_path='cookies.json')
@@ -77,7 +78,8 @@ while True:
 
                     conn.send(response) # отправляем ответ в другой процесс
                 except: 
-                    working_edge_update_cookies()
+                    try:working_edge_update_cookies();
+                    except:pass
 
                     try:                    
                         response = (
