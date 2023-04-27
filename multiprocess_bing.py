@@ -37,7 +37,10 @@ while True:
     except:
         print('Cookies timout, trying to update cookies')
         working_edge_update_cookies()
-        bot = Chatbot(cookie_path='cookies.json')
+        try:
+
+            bot = Chatbot(cookie_path='cookies.json')
+        except: print('ПЕРЕЗАГРУЗИТЕ ДЖАРВИСА')
     
         
     while True:
@@ -73,7 +76,22 @@ while True:
                     print(response)
 
                     conn.send(response) # отправляем ответ в другой процесс
-                except: working_edge_update_cookies()
+                except: 
+                    working_edge_update_cookies()
+
+                    try:                    
+                        response = (
+                        (await bot.ask(prompt=prompt))["item"]["messages"][1]['text'], 
+                        #!! ниже версия с карточками сайтов - ссылками
+                    #   (await bot.ask(prompt=prompt))["item"]["messages"][1]["adaptiveCards"][
+                        #     0
+                        # ]["body"][0]["text"],
+                        #!! end
+                        )
+                        print(response)
+                        conn.send(response) # отправляем ответ в другой процесс
+                    except: pass
+                        
 
             else:
                 wrote = 0
