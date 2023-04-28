@@ -31,13 +31,11 @@ from num2words import num2words
 from transliterate import translit, get_available_language_codes
 
 from multiprocess_bing import working_chat
-# from working_edge_update_cookies import working_edge_update_cookies
-# working_edge_update_cookies()
 from multiprocessing import Process, Pipe
 from multiprocess_wake_word_recogintion import wake_word_recognition
 
 import configparser
-
+import click
 
 # play(f'{CDIR}\\sound\\ok{random.choice([1, 2, 3, 4])}.wav')
 async def play(phrase, wait_done=True):
@@ -104,29 +102,6 @@ async def execute_cmd(cmd: str, voice: str):
         subprocess.Popen([f'{CDIR}\\custom-commands\\Run google.exe'])
         await play("ok")
 
-    elif cmd == 'music':
-        subprocess.Popen([f'{CDIR}\\custom-commands\\Run music.exe'])
-        await play("ok")
-
-    elif cmd == 'music_off':
-        subprocess.Popen([f'{CDIR}\\custom-commands\\Stop music.exe'])
-        time.sleep(0.2)
-        await play("ok")
-
-    elif cmd == 'music_save':
-        subprocess.Popen([f'{CDIR}\\custom-commands\\Save music.exe'])
-        time.sleep(0.2)
-        await play("ok")
-
-    elif cmd == 'music_next':
-        subprocess.Popen([f'{CDIR}\\custom-commands\\Next music.exe'])
-        time.sleep(0.2)
-        await play("ok")
-
-    elif cmd == 'music_prev':
-        subprocess.Popen([f'{CDIR}\\custom-commands\\Prev music.exe'])
-        time.sleep(0.2)
-        await play("ok")
 
     elif cmd == 'sound_off':
         await play("ok", True)
@@ -150,27 +125,7 @@ async def execute_cmd(cmd: str, voice: str):
     elif cmd == 'stupid':
         await play("stupid")
 
-    elif cmd == 'gaming_mode_on':
-        await play("ok")
-        subprocess.check_call([f'{CDIR}\\custom-commands\\Switch to gaming mode.exe'])
-        await play("ready")
 
-    elif cmd == 'gaming_mode_off':
-        await play("ok")
-        subprocess.check_call([f'{CDIR}\\custom-commands\\Switch back to workspace.exe'])
-        await play("ready")
-
-    elif cmd == 'switch_to_headphones':
-        await play("ok")
-        subprocess.check_call([f'{CDIR}\\custom-commands\\Switch to headphones.exe'])
-        time.sleep(0.5)
-        await play("ready")
-
-    elif cmd == 'switch_to_dynamics':
-        await play("ok")
-        subprocess.check_call([f'{CDIR}\\custom-commands\\Switch to dynamics.exe'])
-        time.sleep(0.5)
-        await play("ready")
 
     elif cmd == 'off':
         await play("off", True)
@@ -178,8 +133,19 @@ async def execute_cmd(cmd: str, voice: str):
         porcupine.delete()
         exit(0)
 
-#TODO сделать интерфейс в котором 2 кнопки - запусти(программу), открой(в браузере), скажи шутку(анекдот и тд.)
+#[x]TODO сделать интерфейс в котором 2 кнопки - запусти(программу), открой(в браузере)
+''' 
+{name:{['voice','voice']:data}}
+mysql = data,name(0,1),voice
+if cmd == name(0):
+    click.launch(f'{data}')
+    
+if cmd == name(1):
+    exec_fuc('data')
 
+
+'''
+#? click.launch('https://www.donationalerts.com/r/snappes_tv') - запуск в браузере
 def replace_numbers_with_words(text):
     # Находим все числа в тексте с помощью регулярного выражения
     pattern = re.compile(r'\d+')
@@ -286,7 +252,8 @@ async def gpt_answer(text: str,conn):
     global canceled
     recorder.stop()
     global list_of_text
-
+    
+    text = f'{text}, {config.get("add_to_prompt","add_to_prompt")}'
     await play('internet')
 
     parent_conn, child_conn = Pipe()
@@ -530,6 +497,7 @@ async def main(conn):
     #TODO сделать requirements.txt
     # PORCUPINE
     # Токен Picovoice
+    global config
     config = configparser.ConfigParser()
     config.read('config.ini')
 
