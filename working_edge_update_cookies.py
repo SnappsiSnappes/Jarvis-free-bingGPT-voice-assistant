@@ -52,7 +52,7 @@ def working_edge_update_cookies():
         options.add_argument('--remote-debugging-port=9222')
         # options.add_argument('--disable-extensions') # exp
         # options.use_chromium = True
-        options.add_argument("--headless=new")
+        # options.add_argument("--headless=new")
 
 
         s = Service(executable_path=r"msedgedriver.exe")
@@ -63,12 +63,12 @@ def working_edge_update_cookies():
         # driver.implicitly_wait(5) # exp
         driver.get('https://www.bing.com/')
         #print('зашел')
-        # time.sleep(5)
+        time.sleep(8)
         cookies = driver.get_cookies()
         #print(cookies)
         with open('cookies.json', 'w') as f:
             json.dump(cookies, f)
-
+        print('успешно обновил cookies.json')
         driver.quit()
     except: return False
 
