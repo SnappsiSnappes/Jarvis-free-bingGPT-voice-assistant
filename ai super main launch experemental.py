@@ -38,6 +38,13 @@ from multiprocessing import Process, Pipe
 from multiprocess_wake_word_recogintion import wake_word_recognition
 from working_getter_from_db import working_getter_from_db
 
+
+
+
+
+
+
+
 # play(f'{CDIR}\\sound\\ok{random.choice([1, 2, 3, 4])}.wav')
 async def play(phrase, wait_done=True):
     global recorder
@@ -89,15 +96,22 @@ async def play(phrase, wait_done=True):
         recorder.start()
 
 
-def custum_command(voice):
-    filename = f"{CDIR}\\sound\\"
-    filename += f"greet{random.choice([1, 2, 3])}.wav"
-    wave_obj = sa.WaveObject.from_wave_file(filename)
-    play_obj = wave_obj.play()
-    print(voice)
-    data = working_getter_from_db(text=voice)
-    ##!! return https://vk.com
-    click.launch(data)
+async def custum_command(voice):
+    if 'запусти' not in voice and 'открой' not in voice:
+        return False
+    print('команда паопа в custum_command')
+    
+    data = f"{working_getter_from_db(text=voice)}"
+
+    print(data)
+    if data != 'None':
+        await play('ok')
+        click.launch(data)
+        recorder.start()
+        return True
+    else: return False
+    
+#? click.launch('https://www.donationalerts.com/r/snappes_tv') - запуск в браузере
 
 
 
@@ -144,19 +158,10 @@ async def execute_cmd(cmd: str, voice: str):
         recorder.stop()
         print('заморожен на 30 секунд')
         time.sleep(30)  
-        recorder.start()  
+        recorder.start()
 
 
 
-
-
-
-
-''' 
-
-
-'''
-#? click.launch('https://www.donationalerts.com/r/snappes_tv') - запуск в браузере
 def replace_numbers_with_words(text):
     # Находим все числа в тексте с помощью регулярного выражения
     pattern = re.compile(r'\d+')
@@ -433,8 +438,11 @@ async def va_respond(voice: str,conn):
     global dd
     print(f"Распознано: {voice}")
     recorder.stop()
-    
 
+    if await custum_command(voice):
+        recorder.start()
+        return True
+    
     cmd = await recognize_cmd(await filter_cmd(voice))
 
     print(cmd)
@@ -442,7 +450,6 @@ async def va_respond(voice: str,conn):
     if len(cmd['cmd'].strip()) <= 0:
         recorder.start()
         return False
-#TODO fix/add comands
     elif cmd['percent'] < 70 or cmd['cmd'] not in VA_CMD_LIST.keys():
         if fuzz.ratio(voice.join(voice.split()[:1]).strip(), "скажи") > 75:
 
@@ -481,14 +488,14 @@ async def va_respond(voice: str,conn):
             recorder.start()
             await play('reload')
             return False
+        
         else:
             await play("not_found")
-            time.sleep(1)
-
+            recorder.start()
         return False
     else:
-
         await execute_cmd(cmd['cmd'], voice)
+        recorder.start()
         return True
     
 
@@ -504,8 +511,8 @@ async def main(conn):
     global hour, porcupine
     CDIR              = os.getcwd()
     VA_CMD_LIST       = yaml.safe_load(
-        open('commands.yaml', 'rt', encoding='utf8'),
-    )
+        open('commands.yaml', 'rt', encoding='utf8'),)
+
     # Create a recognizer object and wake word variables
     recognizer        = sr.Recognizer()
 
