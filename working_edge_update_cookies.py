@@ -52,7 +52,7 @@ def working_edge_update_cookies():
         options.add_argument('--remote-debugging-port=9222')
         # options.add_argument('--disable-extensions') # exp
         # options.use_chromium = True
-        # options.add_argument("--headless=new")
+        options.add_argument("--headless=new")
 
 
         s = Service(executable_path=r"msedgedriver.exe")
