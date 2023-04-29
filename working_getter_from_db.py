@@ -3,7 +3,9 @@
 
 #!! working_getter_from_db('открой вк')
 #!! return https://vk.com
-def working_getter_from_db(text:str):
+def working_getter_from_db(text):
+    from fuzzywuzzy import fuzz
+
     def getter_from_db():
         import sqlite3
         conn = sqlite3.connect('mydatabase.db')
@@ -17,7 +19,7 @@ def working_getter_from_db(text:str):
         conn.close()
         return result
     result = getter_from_db()
-
+    #print(result)
 
     all_launch_data = {}
     all_open_data = {}
@@ -53,24 +55,36 @@ def working_getter_from_db(text:str):
         y = ['запусти', 'запускай', 'запуск']
         x = ['открой', 'открывай', 'открыть']
         data = None
+        max_ratio = 0
         if any(word in voice for word in x):
             for key, value in all_open_data.items():
-                if any(voice in voice2 for voice in value):
-                    data = key
-                    break
+                for v in value:
+                    vrt = fuzz.ratio(voice2, v)
+                    if vrt > max_ratio:
+                        max_ratio = vrt
+                        data = key
         elif any(word in voice for word in y):
             for key, value in all_launch_data.items():
-                if any(voice in voice2 for voice in value):
-                    data = key
-                    break
-        return data
+                for v in value:
+                    vrt = fuzz.ratio(voice2, v)
+                    if vrt > max_ratio:
+                        max_ratio = vrt
+                        data = key
+        if max_ratio > 0:
+            return data
+        else:
+            return None
+
 
     voice_get = text
-    data = filtered(voice_get)
-    #! print('data = ', data)
 
+    data = filtered(text)
+    # print(data)
+    # print(
+    # all_launch_data,
+    # all_open_data)
     return data
-
+    
 if __name__ == '__main__':
     text = input('введите команду: ')
     print(working_getter_from_db(text))
