@@ -31,7 +31,7 @@ from num2words import num2words
 from transliterate import translit, get_available_language_codes
 import configparser
 import click
-
+import sqlite3
 
 from multiprocess_bing import working_chat
 from multiprocessing import Process, Pipe
@@ -89,6 +89,18 @@ async def play(phrase, wait_done=True):
         recorder.start()
 
 
+def custum_command(voice):
+    filename = f"{CDIR}\\sound\\"
+    filename += f"greet{random.choice([1, 2, 3])}.wav"
+    wave_obj = sa.WaveObject.from_wave_file(filename)
+    play_obj = wave_obj.play()
+    print(voice)
+    data = working_getter_from_db(text=voice)
+    ##!! return https://vk.com
+    click.launch(data)
+
+
+
 async def execute_cmd(cmd: str, voice: str):
     recorder.stop()
     if cmd == 'open_browser':
@@ -131,14 +143,11 @@ async def execute_cmd(cmd: str, voice: str):
         await play("off", True)
         recorder.stop()
         print('заморожен на 30 секунд')
-        time.sleep(30)    
+        time.sleep(30)  
+        recorder.start()  
 
 
-    async def custum_command(voice):
-            data = working_getter_from_db(voice)
-            ##!! return https://vk.com
-            click.launch(data)
-            await play("ok")
+
 
 
 
@@ -478,6 +487,7 @@ async def va_respond(voice: str,conn):
 
         return False
     else:
+
         await execute_cmd(cmd['cmd'], voice)
         return True
     
