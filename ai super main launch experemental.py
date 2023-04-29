@@ -29,13 +29,14 @@ from EdgeGPT import Chatbot, ConversationStyle
 import datetime
 from num2words import num2words
 from transliterate import translit, get_available_language_codes
+import configparser
+import click
+
 
 from multiprocess_bing import working_chat
 from multiprocessing import Process, Pipe
 from multiprocess_wake_word_recogintion import wake_word_recognition
-
-import configparser
-import click
+from working_getter_from_db import working_getter_from_db
 
 # play(f'{CDIR}\\sound\\ok{random.choice([1, 2, 3, 4])}.wav')
 async def play(phrase, wait_done=True):
@@ -125,13 +126,22 @@ async def execute_cmd(cmd: str, voice: str):
     elif cmd == 'stupid':
         await play("stupid")
 
-
-
-    elif cmd == 'off':
+    elif cmd == 'offf':
+        global ltc
         await play("off", True)
+        recorder.stop()
+        print('заморожен на 30 секунд')
+        time.sleep(30)    
 
-        porcupine.delete()
-        exit(0)
+
+    async def custum_command(voice):
+            data = working_getter_from_db(voice)
+            ##!! return https://vk.com
+            click.launch(data)
+            await play("ok")
+
+
+
 
 ''' 
 
@@ -366,6 +376,20 @@ async def gpt_answer(text: str,conn):
             continue
         
 async def recognize_cmd(cmd: str):
+    """
+    берет значения(не ключи) из yaml и 
+    фильтрует через fuzz.raio.
+    фильтрует их на совпадение с запросом,
+    если хоть что то совпадает больше чем на 0% 
+    то ключи этого значения 
+    вставляет в кастомный
+    словарь, с командой с 
+    наимбольшим процентом и с значением
+    процента совпадения
+    например на запрос - 
+    "открыть браузер" будет: 
+    {'cmd': 'open_browser', 'percent': 100}
+    """
     rc = {'cmd': '', 'percent': 0}
     for c, v in VA_CMD_LIST.items():
 
@@ -379,6 +403,10 @@ async def recognize_cmd(cmd: str):
 
 
 async def filter_cmd(raw_voice: str):
+    """
+    удаляет слова из запроса:
+    'джарвис', 'скажи', 'покажи', 'ответь', 'произнеси', 'расскажи', 'сколько', 'слушай'
+    """
     cmd = raw_voice
 
     for x in VA_ALIAS:
@@ -401,7 +429,7 @@ async def va_respond(voice: str,conn):
     cmd = await recognize_cmd(await filter_cmd(voice))
 
     print(cmd)
-
+    #если тишина
     if len(cmd['cmd'].strip()) <= 0:
         recorder.start()
         return False
@@ -541,7 +569,7 @@ async def main(conn):
                 ltc = time.time()
             #! while True делает бесконечный цикл и он не спит
             #!while time.time() - ltc <= 10: 
-            while time.time() - ltc <= 20: 
+            while time.time() - ltc <= 30: 
 
                 pcm = recorder.read()
                 sp = struct.pack("h" * len(pcm), *pcm)
