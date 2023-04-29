@@ -32,17 +32,12 @@ from transliterate import translit, get_available_language_codes
 import configparser
 import click
 import sqlite3
-
-from multiprocess_bing import working_chat
 from multiprocessing import Process, Pipe
+
+#! внизу мои модули
+from multiprocess_bing import working_chat
 from multiprocess_wake_word_recogintion import wake_word_recognition
 from working_getter_from_db import working_getter_from_db
-
-
-
-
-
-
 
 
 # play(f'{CDIR}\\sound\\ok{random.choice([1, 2, 3, 4])}.wav')
@@ -99,11 +94,7 @@ async def play(phrase, wait_done=True):
 async def custum_command(voice):
     if 'запусти' not in voice and 'открой' not in voice:
         return False
-    print('команда паопа в custum_command')
-    
     data = f"{working_getter_from_db(text=voice)}"
-
-    print(data)
     if data != 'None':
         await play('ok')
         click.launch(data)
@@ -111,7 +102,6 @@ async def custum_command(voice):
         return True
     else: return False
     
-#? click.launch('https://www.donationalerts.com/r/snappes_tv') - запуск в браузере
 
 
 
@@ -585,7 +575,7 @@ async def main(conn):
                 recorder.start()  # prevent self recording
                 ltc = time.time()
             #! while True делает бесконечный цикл и он не спит
-            #!while time.time() - ltc <= 10: 
+            #! while time.time() - ltc <= 10: дефолт
             while time.time() - ltc <= 30: 
 
                 pcm = recorder.read()
