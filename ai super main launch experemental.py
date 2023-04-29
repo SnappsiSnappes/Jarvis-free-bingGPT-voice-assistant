@@ -133,15 +133,7 @@ async def execute_cmd(cmd: str, voice: str):
         porcupine.delete()
         exit(0)
 
-#[x]TODO сделать интерфейс в котором 2 кнопки - запусти(программу), открой(в браузере)
 ''' 
-{name:{['voice','voice']:data}}
-mysql = data,name(0,1),voice
-if cmd == name(0):
-    click.launch(f'{data}')
-    
-if cmd == name(1):
-    exec_fuc('data')
 
 
 '''
@@ -252,7 +244,6 @@ async def gpt_answer(text: str,conn):
     global canceled
     recorder.stop()
     global list_of_text
-    
     text = f'{text}, {config.get("add_to_prompt","add_to_prompt")}'
     await play('internet')
 
@@ -328,12 +319,8 @@ async def gpt_answer(text: str,conn):
                 """
                 фикс бага. суть бага = озвучивал запрос, говорил отмена, на следующий запрос
                 джарвис озвучивает - ответ на старый запрос который был отменен, а через некоторое время
-                озвучивает ответ на последний запрос. я создал счетчики и словарь
-                решение с джарвисом алгоритм -
-                -
-                делаем счетчик запросов начинающийся с еденицы
-                делаем словарь с запрос-ответ
-                обновляется счетчик например 2 запроса = читаем второй элемент, если его нет ждем его
+                озвучивает ответ на последний запрос. я создал счетчики и словарь с запрос-ответ
+                обновляется счетчик например 2 запроса = читаем второй элемент, если его нет pass
                 -
                 d = словарь
                 dd = счетчик
@@ -358,9 +345,7 @@ async def gpt_answer(text: str,conn):
                 canceled = check_for_cancel()
                 if canceled == True:break
                 try:
-                    
-                    Speech_it = d[len_of_texts][1] #!ddd
-                            
+                    Speech_it = d[len_of_texts][1]
                     if Speech_it:
                         result = split_string(d[len_of_texts][1])
                         for i in result:
@@ -372,7 +357,6 @@ async def gpt_answer(text: str,conn):
                     else:
                         print('что то пошло не так...')
                         canceled = True
-                        p1.join()
                         p1.terminate()
                         
                 except:pass
@@ -423,8 +407,6 @@ async def va_respond(voice: str,conn):
         return False
 #TODO fix/add comands
     elif cmd['percent'] < 70 or cmd['cmd'] not in VA_CMD_LIST.keys():
-        # play("not_found")
-        # tts.va_speak("Что?")
         if fuzz.ratio(voice.join(voice.split()[:1]).strip(), "скажи") > 75:
 
             if first_request:
