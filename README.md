@@ -1,3 +1,3 @@
 # Jarvis-free-bingGPT-voice-assistant!
 
-![1382_wide](https://user-images.githubusercontent.com/111605401/235343530-a83378bd-7a0a-4f58-9315-66a4ff1d68a9.png)
+![1382_wide_small2](https://user-images.githubusercontent.com/111605401/235349662-31b3ea1e-c4f7-43bc-9959-792e51a27a2d.png)
