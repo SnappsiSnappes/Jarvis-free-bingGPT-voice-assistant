@@ -19,7 +19,9 @@
 7) Следуйте инструкциям USAGE.
 
 ## Проблемы с правильной установкой ffmpeg
-- Установите Chocolately, используя этот код в PowerShell:
+1) Установите ffmpeg любым удобным для вас способом. https://ffmpeg.org/download.html
+- распокуйте папку в любую директорию и занесите в переменную PATH путь до например C:/ffmpeg/bin/
+2) быстрый способ - или таким способом - Установите Chocolately, используя этот код в PowerShell:
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 Затем, используя PowerShell, выполните: choco install ffmpeg
 ## Использование
