@@ -8,7 +8,7 @@
 ### Список команд - в yaml документе commands.jaml 
 - В случае ошибки установки связи с BingGPT - произойдет автоматическая замена cookies.json на новые. За это отвечает working_edge_update_cookies.py
 ## Инструкции
-1) Сначала зарегистрируйте учетную запись Microsoft и загрузите Microsoft Edge (если еще этого не сделали).
+1) Сначала зарегистрируйте учетную запись Microsoft и скачайте последнюю версию Microsoft Edge.
 2) Используйте VPN, если вы находитесь в России.
 3) Перейдите на https://www.bing.com/ и получите доступ к чату на основе GPT в Bing (установите страну своей учетной записи как США).
 4) Скачайте расширение https://chrome.google.com/webstore/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkalmdm.
