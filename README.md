@@ -44,4 +44,5 @@ add_to_prompt = можно указать какой нибудь стиль в�
 ### Схема работы 😊 
 ![схема](https://user-images.githubusercontent.com/111605401/235351434-7f6c7d9a-8289-4e02-b4d2-07ddc94b2af5.png)
 
+donate - https://www.donationalerts.com/r/snappes_tv
 ### Связь со мной телега - https://t.me/SnappesiSnappes  почта - 42leonid@gmail.com
