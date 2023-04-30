@@ -17,8 +17,8 @@
 7) Следуйте инструкциям USAGE.
 
 ## Проблемы с правильной установкой ffmpeg
-- Установите Chocolately, используя этот код в PowerShell:'''
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))'''
+- Установите Chocolately, используя этот код в PowerShell:
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 Затем, используя PowerShell, выполните: choco install ffmpeg
 ## Использование
 - Установите зависимости: pip install -r requirements.txt
