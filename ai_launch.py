@@ -107,20 +107,9 @@ async def custum_command(voice):
 
 async def execute_cmd(cmd: str, voice: str):
     recorder.stop()
-    if cmd == 'open_browser':
-        subprocess.Popen([f'{CDIR}\\custom-commands\\Run browser.exe'])
-        await play("ok")
-
-    elif cmd == 'open_youtube':
-        subprocess.Popen([f'{CDIR}\\custom-commands\\Run youtube.exe'])
-        await play("ok")
-
-    elif cmd == 'open_google':
-        subprocess.Popen([f'{CDIR}\\custom-commands\\Run google.exe'])
-        await play("ok")
 
 
-    elif cmd == 'sound_off':
+    if cmd == 'sound_off':
         await play("ok", True)
 
         devices = AudioUtilities.GetSpeakers()
@@ -484,9 +473,12 @@ async def va_respond(voice: str,conn):
             recorder.start()
         return False
     else:
-        await execute_cmd(cmd['cmd'], voice)
-        recorder.start()
-        return True
+        if not await execute_cmd(cmd['cmd'], voice):
+            recorder.start()
+            return False
+        else:
+            recorder.start()
+            return True
     
 
 async def main(conn):
@@ -511,7 +503,7 @@ async def main(conn):
     VA_VER            = "3.0"
     VA_ALIAS          = ('джарвис',)
     VA_TBR            = ('скажи', 'покажи', 'ответь', 'произнеси', 'расскажи', 'сколько', 'слушай')
-    #TODO сделать requirements.txt
+
     # PORCUPINE
     # Токен Picovoice
     global config
