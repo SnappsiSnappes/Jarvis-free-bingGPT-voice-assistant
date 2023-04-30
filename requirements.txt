@@ -12,8 +12,12 @@ ctypes
 pvporcupine
 simpleaudio
 yaml
+sounddevice
 comtypes
+tkinter
+torch
 fuzzywuzzy
+pyaudio
 pvrecorder
 pycaw
 rich
