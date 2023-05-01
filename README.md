@@ -37,6 +37,7 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 - Используйте working_gui.py чтобы добавить свои команды , или working_gui.exe - это одно и то же.
 вот так выглядит интерфейс добавления своих команд.
 ### ![image](https://user-images.githubusercontent.com/111605401/235350281-a9ed8476-584a-4f2c-aad8-0ec2447635ba.png)
+### ![image](https://user-images.githubusercontent.com/111605401/235444261-15d79af0-36eb-4b36-b485-9c3f57f88540.png)
 
 ### Обратите внимание: 
 - Первое - октрой/запусти , открой - указывайте сайт в данные https:// somewebsite.com (можно без https/http), запусти - указыайте метоположение файла пример - c:/dir/my_file.exe.
