@@ -19,7 +19,7 @@
 4) Скачайте расширение https://chrome.google.com/webstore/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkalmdm.
 5) Перейдите на домашнюю страницу Bing и нажмите кнопку "Export cookies" в формате json в буфер обмена.
 6) Создайте файл внутри директории со скриптом, назовите его - 'cookies.json' и вставьте свои куки в этот файл.
-7) Следуйте инструкциям USAGE.
+7) Следуйте инструкциям Использование.
 
 ## Проблемы с правильной установкой ffmpeg
 1) Установите ffmpeg любым удобным для вас способом. https://ffmpeg.org/download.html
