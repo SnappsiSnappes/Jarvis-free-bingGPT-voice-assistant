@@ -72,7 +72,7 @@ async def play(phrase, wait_done=True):
     elif phrase == "stupid":
         filename += 'stupid.wav'
     elif phrase == "reload":
-        filename += f'reload{random.choice([1, 2, 5])}.wav'
+        filename += f'reload{random.choice([1, 2, 3])}.wav'
     elif phrase == "off":
         filename += 'off.wav'
     elif phrase == 'internet':
