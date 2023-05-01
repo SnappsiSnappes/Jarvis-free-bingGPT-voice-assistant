@@ -24,11 +24,11 @@
 ## Проблемы с правильной установкой ffmpeg
 1) Установите ffmpeg любым удобным для вас способом. https://ffmpeg.org/download.html
 - распокуйте папку в любую директорию и занесите в переменную PATH путь до например C:/ffmpeg/bin/
-2) быстрый способ - или таким способом - Установите Chocolately, используя этот код в PowerShell:
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-Затем, используя PowerShell, выполните: choco install ffmpeg
+2) быстрый способ - или таким способом - Установите Chocolately, используя этот код в PowerShell:```
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))```
+Затем, используя PowerShell, выполните: ```choco install ffmpeg```
 ## Использование
-- Установите зависимости: pip install -r requirements.txt
+- Установите зависимости: ```pip install -r requirements.txt```
 - Замените ключ в config.cfg - [PICOVOICE_TOKEN]  на свой API-ключ. (зарегестрируйтесь на https://console.picovoice.ai ,чтобы получить его бесплатно)
 - Запустите скрипт ai_launch.py
 - Скажите Джарвис -  чтобы разбудить бота.
