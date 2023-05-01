@@ -71,8 +71,8 @@ async def play(phrase, wait_done=True):
         #?filename += f"run{random.choice([1, 2, 3])}.wav"
     elif phrase == "stupid":
         filename += 'stupid.wav'
-    elif phrase == "ready":
-        filename += 'ready.wav'
+    elif phrase == "reload":
+        filename += f'reload{random.choice([1, 2, 5])}.wav'
     elif phrase == "off":
         filename += 'off.wav'
     elif phrase == 'internet':
@@ -453,7 +453,7 @@ async def va_respond(voice: str,conn):
             
             # time.sleep(0.5)
             #recorder.start()
-            await play('read')
+            await play('reload')
             return False
         
         else:
