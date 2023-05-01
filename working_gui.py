@@ -31,17 +31,15 @@ def add_item():
         conn.commit()
         update_listbox()
 
-def copy(event):
-    event.widget.event_generate("<<Copy>>")
 
-def paste(event):
-    event.widget.event_generate("<<Paste>>")
 # Создание главного окна
 root = tk.Tk()
-root.title('SQLite GUI')
+root.title('Создатель команд')
 root.resizable(False, False)
 root.geometry('500x560')
-
+try:
+    root.iconbitmap('snappes.ico')
+except:pass
 # Создание списка и кнопок удаления и добавления
 frame = tk.Frame(root)
 frame.pack()
@@ -55,7 +53,7 @@ listbox.pack(side=tk.LEFT)
 update_listbox()
 yscrollbar.config(command=listbox.yview)
 xscrollbar.config(command=listbox.xview)
-delete_button = tk.Button(root, text='Delete', command=delete_item, width=10, height=2)
+delete_button = tk.Button(root, text='Удалить', command=delete_item, width=10, height=2)
 delete_button.pack()
 action_var = tk.StringVar(root)
 action_var.set('запусти')
@@ -71,11 +69,9 @@ data_label = tk.Label(root, text='Данные:',font=('TkDefaultFont', 13))
 data_label.pack()
 data_entry = tk.Entry(root,width=35,font=('TkDefaultFont', 13))
 #!!
-data_entry.bind("<Control-c>", copy)
-data_entry.bind("<Control-v>", paste)
 data_entry.pack()
 #!!
-add_button = tk.Button(root, text='Add', command=add_item, width=10, height=2)
+add_button = tk.Button(root, text='Добавить', command=add_item, width=10, height=2)
 add_button.pack()
 
 # Запуск главного цикла
