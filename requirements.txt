@@ -6,6 +6,7 @@ jsonpointer==2.3
 fastjsonschema==2.16.2
 async-timeout==4.0.2
 antlr4-python3-runtime==4.9.3
+omegaconf==2.3.0
 asyncio==3.4.3
 pywin32-ctypes==0.2.0
 pvporcupine==2.2.0
