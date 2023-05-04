@@ -1,3 +1,14 @@
+
+## Установка и запуск
+- Клонируйте репозиторий на свой компьютер.
+- Создайте виртуальное окружение с помощью команды в **CMD/powershell** 
+```python -m venv venv``` и активируйте его ```.\venv\Scripts\activate``` 
+- Python 3.10.6 x64 - проверено
+- Установите все зависимости с помощью команды 
+```
+python.exe -m pip install --upgrade pip
+pip install -r requirements.txt
+```
 ### UPD: если у вас ошибка с pvporcupine , ждите, разработчики работают над фиксом, я, в свою очередь сделаю версию с обычным text-recogintion.
 ### UPD2: пофиксил requirements.txt, дополнил описание ffmpeg
 ### UPD3: тем у кого не работает PVC запускайте ai_launch_no_PVC - там никакого токена не нужно.
