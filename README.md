@@ -16,10 +16,7 @@ python ai_launch.py
 или
 python ai_launch_no_PVC.py
 ```
-### UPD: если у вас ошибка с pvporcupine , ждите, разработчики работают над фиксом, я, в свою очередь сделаю версию с обычным text-recogintion.
-### UPD2: пофиксил requirements.txt, дополнил описание ffmpeg
-### UPD3: тем у кого не работает PVC запускайте ai_launch_no_PVC - там никакого токена не нужно.
-### UPD4: смотрите видео
+### UPD: смотрите видео
 
 # Jarvis - ваш голосовой ассистент
 
