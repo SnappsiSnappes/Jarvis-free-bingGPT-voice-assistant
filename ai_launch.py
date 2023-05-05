@@ -240,7 +240,7 @@ async def vosk_listen_for_cancel():
 def split_string(s):
     return [s[i:i+1000] for i in range(0, len(s), 1000)]
 
-async def gpt_answer(text: str,conn):
+async def gpt_answer(text: str,conn,bug=None):
     global dd
     global d
     global recorder, ltc
@@ -248,7 +248,7 @@ async def gpt_answer(text: str,conn):
     recorder.stop()
     global list_of_text
     text = f'{text}, {config.get("add_to_prompt","add_to_prompt")}'
-    await play('internet')
+    if not bug: await play('internet')
 
     parent_conn, child_conn = Pipe()
     p1 = Process(target=wake_word_recognition, args=(child_conn,))
@@ -266,20 +266,6 @@ async def gpt_answer(text: str,conn):
     while not canceled:
 
         print('Jarvis зашел в интернет')        
-        #!!
-        # bot = Chatbot(cookie_path='cookies.json')
-        # print('gpt_answer passed bot , before await')
-        # await asyncio.sleep(2)
-        # response = await bot.ask(prompt=text, conversation_style=ConversationStyle.creative)
-        # #print(response)
-        # for message in response["item"]["messages"]:
-        #     if message["author"] == "user":
-        #         global test
-        #         test = str(message['text'])
-        #         print('я тест',test)
-        #         print('я текст',text)
-        #!!
-        # Select only the bot response from the response dictionary
         #отправляем запрос в working 
         canceled = check_for_cancel()
         if canceled == True:break
@@ -294,12 +280,7 @@ async def gpt_answer(text: str,conn):
                 response = conn.recv()
                 response = f'{response[0]}'
                 print('response- ',response)
-                #?
-                # for message in response["item"]["messages"]: 
-                #     if message["author"] == "bot":
-                #         bot_response = message["text"]
-                #?
-                # Remove [^#^] citations in response
+
                 bot_response = response
                 bot_response = re.sub('\[\^\d+\^\]', '', bot_response)
                 bot_response = bot_response.replace('привет, это Bing',' вот что я нашел в интернете ')
@@ -316,7 +297,12 @@ async def gpt_answer(text: str,conn):
                         bot_response = bot_response.replace('+','плюс ')
                         bot_response = bot_response.replace('-','минус ')
                         bot_response = bot_response.replace('°',' ')
-
+                #!!
+                if len(bot_response) < 10:
+                    await gpt_answer(text=text,conn=conn,bug=True)
+                    p1.terminate()
+                    return
+                #!!
                 replaced_numbers = replace_numbers_with_words(bot_response)
 
                 """
@@ -336,15 +322,7 @@ async def gpt_answer(text: str,conn):
                 dd = dd+1
                 d.update({dd: [text,replaced_numbers]})
 
-                # len_of_d = len(d)
-                # print(len_of_texts)
-                # print(d)
-                # print(dd)
-                # print(len_of_d)
-                #!result = split_string(d[len_of_texts][1])
 
-                #?Speech_it = d[len_of_texts][1]
-                #?print('я Speech_it=',Speech_it)
                 canceled = check_for_cancel()
                 if canceled == True:break
                 try:
@@ -443,27 +421,10 @@ async def va_respond(voice: str,conn):
             # создаем счетчик для алгоритма - корректного озвучивания
             list_of_text.append(voice)
 
-            #! print('list_of_text=',list_of_text)
-            # создаем задачи
 
             await gpt_answer(voice,conn)
 
-            #!answer_task = asyncio.create_task(gpt_answer(voice,conn))
-            #########?cancel_task = asyncio.create_task(listen_for_cancel()) #медленная версия
-            #cancel_task = asyncio.create_task(vosk_listen_for_cancel())
-            # ждем, пока хотя бы одна из задач не завершится
-            #?await asyncio.gather(answer_task, cancel_task, return_exceptions=True)
-            # !done, _ = await asyncio.wait([answer_task, cancel_task], return_when=asyncio.FIRST_COMPLETED,timeout=120)
-            # # отменяем оставшуюся задачу
-            # !for task in done:
-            # !    task.cancel(
-            
-            # устанавливаем флаг отмены
-            #canceled = True
-            # ждем завершения оставшихся задач
-            #? await gpt_answer(voice)
-            
-            # time.sleep(0.5)
+
             recorder.start()
             await play('reload')
             return False
@@ -487,7 +448,6 @@ async def main(conn):
     
     global canceled
     global list_of_text
-    # some consts
     global CDIR,VA_ALIAS,VA_CMD, recognizer,VA_NAME
     global VA_VER,VA_TBR , VA_CMD_LIST,icrophone_index, model, samplerate, device, kaldi_rec, q, recorder, CHROME_PATH, message_log, first_request, dd
     global hour, porcupine
@@ -564,10 +524,11 @@ async def main(conn):
                 recorder.stop()
                 await play('greet',True)
                 print("Здравствуйте.")
-                recorder.start()  # prevent self recording
+                recorder.start()  
                 ltc = time.time()
             #! while True делает бесконечный цикл и он не спит
             #! while time.time() - ltc <= 10: дефолт
+            #! после 30 секунд просит произнести wake_word - Джарвис
             while time.time() - ltc <= 30: 
 
                 pcm = recorder.read()

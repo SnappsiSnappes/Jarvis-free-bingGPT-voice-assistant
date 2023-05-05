@@ -244,7 +244,7 @@ async def vosk_listen_for_cancel():
 def split_string(s):
     return [s[i:i+1000] for i in range(0, len(s), 1000)]
 
-async def gpt_answer(text: str,conn):
+async def gpt_answer(text: str,conn,bug=None):
     global dd
     global d
     try:
@@ -255,7 +255,7 @@ async def gpt_answer(text: str,conn):
     
     global list_of_text
     text = f'{text}, {config.get("add_to_prompt","add_to_prompt")}'
-    await play('internet')
+    if not bug: await play('internet')
 
 
     parent_conn, child_conn = Pipe()
@@ -275,17 +275,10 @@ async def gpt_answer(text: str,conn):
 
         print('Jarvis зашел в интернет')        
         #!!
-        # bot = Chatbot(cookie_path='cookies.json')
-        # print('gpt_answer passed bot , before await')
-        # await asyncio.sleep(2)
-        # response = await bot.ask(prompt=text, conversation_style=ConversationStyle.creative)
-        # #print(response)
-        # for message in response["item"]["messages"]:
-        #     if message["author"] == "user":
-        #         global test
-        #         test = str(message['text'])
-        #         print('я тест',test)
-        #         print('я текст',text)
+        if len(bot_response) < 10:
+            await gpt_answer(text=text,conn=conn,bug=True)
+            p1.terminate()
+            return
         #!!
         # Select only the bot response from the response dictionary
         #отправляем запрос в working 
