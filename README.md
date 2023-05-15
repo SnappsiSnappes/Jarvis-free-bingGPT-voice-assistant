@@ -52,6 +52,7 @@ python ai_launch_no_PVC.py
 2) быстрый способ - Установите Chocolately, используя этот код в PowerShell:```
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))```
 Затем, используя PowerShell, выполните: ```choco install ffmpeg```
+3) https://www.youtube.com/watch?v=jZLqNocSQDM посмотрите видео если у вас не получается установить ffmpeg
 ## Использование
 - Установите зависимости: ```pip install -r requirements.txt```
 - Замените ключ в config.cfg - [PICOVOICE_TOKEN]  на свой API-ключ. (зарегестрируйтесь на https://console.picovoice.ai ,чтобы получить его бесплатно)
