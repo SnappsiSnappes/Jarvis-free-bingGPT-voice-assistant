@@ -1,6 +1,6 @@
 
-
-
+# input style
+# запустите файл, и напишите свое сообщение когда увидите надпись You
 import asyncio
 from EdgeGPT import Chatbot
 import sys
