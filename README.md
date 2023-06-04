@@ -10,6 +10,7 @@
 ```
 python.exe -m pip install --upgrade pip
 pip install -r requirements.txt
+pip install -r requirements2.txt
 ```
 - установите ffmpeg корректным образом, внизу есть пояснение
 - отредактируйте config.ini 
