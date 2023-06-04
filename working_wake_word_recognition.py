@@ -1,3 +1,7 @@
+# Используя модуль pvporcupine этот скрипт слушает микрофон и распознает слово "отмена"
+# В случае успеха исполняется код print('отмена')
+# в параметрах функции conn=None не используется напрямую в коде.
+# Conn = connection используется для Pipe multiprocessing
 
 def main(conn=None):
     import pvporcupine
