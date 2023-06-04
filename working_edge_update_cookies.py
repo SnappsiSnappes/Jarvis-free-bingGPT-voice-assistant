@@ -10,9 +10,10 @@ def working_edge_update_cookies():
     import time
     from subprocess import CREATE_NO_WINDOW
 
-
-
-
+    try:
+        remove = os.path.join(os.path.expanduser('~'), 'AppData', 'Local', 'Microsoft', 'Edge', 'User Data1')
+        shutil.rmtree(remove)
+    except:pass
     # path = str(edgedriver_autoinstaller.install())
     # src = rf'{path}'
     # dst = os.path.dirname(os.path.abspath(__file__))
@@ -21,10 +22,12 @@ def working_edge_update_cookies():
     def check():
         try:
             edge_path2 = os.path.join(os.path.expanduser('~'), 'AppData', 'Local', 'Microsoft', 'Edge', 'User Data1')
-            if not os.path.exists(edge_path2):
-                src = os.path.join(os.path.expanduser('~'), 'AppData', 'Local', 'Microsoft', 'Edge', 'User Data')
-                shutil.copytree(src, edge_path2)
-        except:pass
+            
+            os.path.exists(edge_path2)
+            src = os.path.join(os.path.expanduser('~'), 'AppData', 'Local', 'Microsoft', 'Edge', 'User Data')
+            shutil.copytree(src, edge_path2)
+        except:
+            pass
 
     try:
 
@@ -35,6 +38,7 @@ def working_edge_update_cookies():
 
         check()
         edge_path = (f"{os.path.expanduser('~')}/AppData/Local/Microsoft/Edge/User Data1")
+        print(edge_path)
         options = Options()
         options.add_argument(f"--user-data-dir={edge_path}")
         # options.add_argument("--headless")
@@ -63,7 +67,7 @@ def working_edge_update_cookies():
         # driver.implicitly_wait(5) # exp
         driver.get('https://www.bing.com/')
         print('зашел')
-        time.sleep(8)
+        time.sleep(2)
         cookies = driver.get_cookies()
         print(cookies)
         with open('cookies.json', 'w') as f:
