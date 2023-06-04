@@ -45,8 +45,8 @@ def second_function(conn):
         while True:
 
             if conn.poll():
-                conn.recv()
-                # print(f"Received response: {response[-1]}")
+                response = conn.recv()
+                print(f"Received response: {response[-1]}")
                 d.clear()
                 break
             time.sleep(3)
