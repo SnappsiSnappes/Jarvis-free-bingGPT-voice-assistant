@@ -20,10 +20,10 @@ def working_edge_update_cookies():
     #     shutil.move(src, dst)
     def check():
         try:
-            edge_path = os.path.join(os.path.expanduser('~'), 'AppData', 'Local', 'Microsoft', 'Edge', 'User Data1')
-            if not os.path.exists(edge_path):
+            edge_path2 = os.path.join(os.path.expanduser('~'), 'AppData', 'Local', 'Microsoft', 'Edge', 'User Data1')
+            if not os.path.exists(edge_path2):
                 src = os.path.join(os.path.expanduser('~'), 'AppData', 'Local', 'Microsoft', 'Edge', 'User Data')
-                shutil.copytree(src, edge_path)
+                shutil.copytree(src, edge_path2)
         except:pass
 
     try:
@@ -45,13 +45,13 @@ def working_edge_update_cookies():
         options.add_argument('--disable-background-timer-throttling') # exp
         options.add_argument('--remote-allow-origins=*')
         options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--no-sandbox')
+        #options.add_argument('--no-sandbox')
         options.add_argument("--disable-gpu")
         options.add_argument("--log-level=3")
-        options.add_argument("--silent")
+        #options.add_argument("--silent")
         options.add_argument('--remote-debugging-port=9222')
-        # options.add_argument('--disable-extensions') # exp
-        # options.use_chromium = True
+        options.add_argument('--disable-extensions') # exp
+        options.use_chromium = True
         options.add_argument("--headless=new")
 
 
@@ -62,15 +62,15 @@ def working_edge_update_cookies():
 
         # driver.implicitly_wait(5) # exp
         driver.get('https://www.bing.com/')
-        #print('зашел')
+        print('зашел')
         time.sleep(8)
         cookies = driver.get_cookies()
-        #print(cookies)
+        print(cookies)
         with open('cookies.json', 'w') as f:
             json.dump(cookies, f)
         print('успешно обновил cookies.json')
         driver.quit()
-    except: return False
+    except: print('error')
 
 if __name__ == '__main__':
     working_edge_update_cookies()
