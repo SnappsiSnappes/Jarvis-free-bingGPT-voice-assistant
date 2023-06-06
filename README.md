@@ -91,7 +91,7 @@ donate - https://www.donationalerts.com/r/snappes_tv
 ## принцип обновления cookies
 1) Выйдите из Microsoft EDGE браузера
 - запустите ai_launch.py или working_update_cookies.py
-![image](https://github.com/SnappsiSnappes/Jarvis-free-bingGPT-voice-assistant/assets/111605401/5bc7cfa2-cd24-40ae-8e9a-0d4bec9357ef)
+- ![image](https://github.com/SnappsiSnappes/Jarvis-free-bingGPT-voice-assistant/assets/111605401/5bc7cfa2-cd24-40ae-8e9a-0d4bec9357ef)
 2) вы увидите в консоли Trying to update cookies 
 3) ждите 
 4) далее увидите в терминале много текста - значит все ок, cookies обновлены. Файл cookies.json создан
