@@ -12,6 +12,8 @@ python.exe -m pip install --upgrade pip
 pip install -r requirements.txt
 pip install -r requirements2.txt
 ```
+Если видите ошибки то разберитесь с ними и установити зависимости. Проблемный модуль - PyAudio
+Требуется много зависимостей связанных с C++ Redist, и прочие. К сожалению пока так.
 - установите ffmpeg корректным образом, внизу есть пояснение
 - отредактируйте config.ini 
 - запуск
