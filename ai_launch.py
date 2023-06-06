@@ -42,9 +42,11 @@ from working_getter_from_db import working_getter_from_db
 
 # play(f'{CDIR}\\sound\\ok{random.choice([1, 2, 3, 4])}.wav')
 async def play(phrase, wait_done=True):
+    
     global recorder
     recorder.stop()
     filename = f"{CDIR}\\sound\\"
+
 
     if phrase == "greet":  # for py 3.8
         filename += f"greet{random.choice([1, 2, 3])}.wav"
@@ -92,8 +94,10 @@ async def play(phrase, wait_done=True):
 
 
 async def custum_command(voice):
-    if 'запусти' not in voice and 'открой' not in voice:
-        return False
+    if 'скажи' in voice:return False
+    #if 'запусти' not in voice and 'открой' not in voice:
+    #    
+    #    return False
     data = f"{working_getter_from_db(text=voice)}"
     if data != 'None':
         await play('ok')
@@ -163,7 +167,7 @@ async def listen_for_cancel():
     with microphone as source:
         recognizer.adjust_for_ambient_noise(source)
     
-    print('Listening for cancel keyword...')
+    print('Скажите "отмена" для отмены поиска...')
     
     while not canceled:
         recorder.stop()
@@ -176,7 +180,7 @@ async def listen_for_cancel():
             if "отмена" in text.lower():
                 
                 canceled = True
-                print("Cancel keyword detected. Cancelling all tasks.")
+                print("Поиск отменен.")
                 await play('internet_off')
                 return
         except sr.UnknownValueError:
@@ -305,17 +309,6 @@ async def gpt_answer(text: str,conn,bug=None):
                 #!!
                 replaced_numbers = replace_numbers_with_words(bot_response)
 
-                """
-                фикс бага. суть бага = озвучивал запрос, говорил отмена, на следующий запрос
-                джарвис озвучивает - ответ на старый запрос который был отменен, а через некоторое время
-                озвучивает ответ на последний запрос. я создал счетчики и словарь с запрос-ответ
-                обновляется счетчик например 2 запроса = читаем второй элемент, если его нет pass
-                -
-                d = словарь
-                dd = счетчик
-
-                """
-
                 len_of_texts=len(list_of_text)
 
                 
@@ -331,8 +324,7 @@ async def gpt_answer(text: str,conn,bug=None):
                         result = split_string(d[len_of_texts][1])
                         for i in result:
                             working_tts(i)
-                        # print(Speech_it)
-                        # working_tts(result) устарело
+
                         canceled = True
                         p1.terminate()
                     else:
@@ -423,6 +415,7 @@ async def va_respond(voice: str,conn):
 
 
             await gpt_answer(voice,conn)
+
 
 
             recorder.start()
@@ -519,7 +512,6 @@ async def main(conn):
             keyword_index = porcupine.process(pcm)
             
             
-
             if keyword_index == 0:
                 recorder.stop()
                 await play('greet',True)

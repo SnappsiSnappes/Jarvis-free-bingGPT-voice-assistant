@@ -96,13 +96,13 @@ async def play(phrase, wait_done=True):
 
 
 async def custum_command(voice):
-    if 'запусти' not in voice and 'открой' not in voice:
-        return False
+    if 'скажи' in voice:return False
+
     data = f"{working_getter_from_db(text=voice)}"
     if data != 'None':
         await play('ok')
         click.launch(data)
-        #recorder.start()
+
         return True
     else: return False
     
@@ -167,7 +167,7 @@ async def listen_for_cancel():
     with microphone as source:
         recognizer.adjust_for_ambient_noise(source)
     
-    print('Listening for cancel keyword...')
+    print('Скажите "отмена" для отмены поиска...')
     
     while not canceled:
         #recorder.stop()
@@ -176,11 +176,11 @@ async def listen_for_cancel():
             await asyncio.sleep(4)
         try:
             text = recognizer.recognize_google(audio, language='ru-RU')
-            print(f"Recognized text: {text}")
+            #print(f"Recognized text: {text}")
             if "отмена" in text.lower():
                 
                 canceled = True
-                print("Cancel keyword detected. Cancelling all tasks.")
+                print("Поиск отменен.")
                 await play('internet_off')
                 return
         except sr.UnknownValueError:
@@ -274,12 +274,7 @@ async def gpt_answer(text: str,conn,bug=None):
     while not canceled:
 
         print('Jarvis зашел в интернет')        
-        #!!
-        if len(bot_response) < 10:
-            await gpt_answer(text=text,conn=conn,bug=True)
-            p1.terminate()
-            return
-        #!!
+
         # Select only the bot response from the response dictionary
         #отправляем запрос в working 
         canceled = check_for_cancel()
@@ -317,7 +312,12 @@ async def gpt_answer(text: str,conn,bug=None):
                         bot_response = bot_response.replace('+','плюс ')
                         bot_response = bot_response.replace('-','минус ')
                         bot_response = bot_response.replace('°',' ')
-
+                #!!
+                if len(bot_response) < 10:
+                    await gpt_answer(text=text,conn=conn,bug=True)
+                    p1.terminate()
+                    return
+                #!!
                 replaced_numbers = replace_numbers_with_words(bot_response)
 
 
@@ -424,41 +424,22 @@ async def va_respond(voice: str,conn):
             # создаем счетчик для алгоритма - корректного озвучивания
             list_of_text.append(voice)
 
-            #! print('list_of_text=',list_of_text)
-            # создаем задачи
-
             await gpt_answer(voice,conn)
 
-            #!answer_task = asyncio.create_task(gpt_answer(voice,conn))
-            #########?cancel_task = asyncio.create_task(listen_for_cancel()) #медленная версия
-            #cancel_task = asyncio.create_task(vosk_listen_for_cancel())
-            # ждем, пока хотя бы одна из задач не завершится
-            #?await asyncio.gather(answer_task, cancel_task, return_exceptions=True)
-            # !done, _ = await asyncio.wait([answer_task, cancel_task], return_when=asyncio.FIRST_COMPLETED,timeout=120)
-            # # отменяем оставшуюся задачу
-            # !for task in done:
-            # !    task.cancel(
-            
-            # устанавливаем флаг отмены
-            #canceled = True
-            # ждем завершения оставшихся задач
-            #? await gpt_answer(voice)
-            
-            # time.sleep(0.5)
-            #recorder.start()
+
             await play('reload')
             return False
         
         else:
             await play("not_found")
-            #recorder.start()
+
         return False
     else:
         if not await execute_cmd(cmd['cmd'], voice):
-            #recorder.start()
+
             return False
         else:
-            #recorder.start()
+
             return True
     
 
@@ -468,7 +449,6 @@ async def main(conn):
     
     global canceled
     global list_of_text
-    # some consts
     global CDIR,VA_ALIAS,VA_CMD, recognizer,VA_NAME
     global VA_VER,VA_TBR , VA_CMD_LIST,icrophone_index, model, samplerate, device, kaldi_rec, q, CHROME_PATH, message_log, first_request, dd
     global hour, porcupine
@@ -491,14 +471,6 @@ async def main(conn):
     config = configparser.ConfigParser()
     config.read('config.ini')
 
-    # PICOVOICE_TOKEN   = config.get('PICOVOICE_TOKEN','token')
-    # porcupine         = pvporcupine.create(
-    #     access_key    = PICOVOICE_TOKEN,
-    #     keywords      = ['jarvis'],
-    #     sensitivities = [1]
-    # )
-
-    # Путь к браузеру Google Chrome
     CHROME_PATH       = r'C:\Program Files (x86)\Google\Chrome\Application'
     # VOSK
     MICROPHONE_INDEX  = int(config.get('MIC','microphone_index'))
@@ -530,7 +502,6 @@ async def main(conn):
     time.sleep(0.5)
     ltc = time.time() - 1000
     first_request = True
-    # print('Using device: %s' % #recorder.selected_device)
     print('Произнесите команду Джарвис')
     await play('run')
     
