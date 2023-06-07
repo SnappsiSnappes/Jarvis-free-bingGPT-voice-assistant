@@ -59,7 +59,6 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManage
 Затем, используя PowerShell, выполните: ```choco install ffmpeg```
 3) https://www.youtube.com/watch?v=jZLqNocSQDM посмотрите видео если у вас не получается установить ffmpeg
 ## Использование
-- Установите зависимости: ```pip install -r requirements.txt```
 - Замените ключ в config.cfg - [PICOVOICE_TOKEN]  на свой API-ключ. (зарегестрируйтесь на https://console.picovoice.ai ,чтобы получить его бесплатно)
 - Запустите скрипт ai_launch.py
 - Скажите Джарвис -  чтобы разбудить бота.
