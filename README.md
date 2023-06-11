@@ -95,3 +95,4 @@ donate - https://www.donationalerts.com/r/snappes_tv
 2) вы увидите в консоли Trying to update cookies 
 3) ждите 
 4) далее увидите в терминале много текста - значит все ок, cookies обновлены. Файл cookies.json создан
+Совет: на MS EDGE ставьте расширение впн - Browsec  - постоянно включенным.
