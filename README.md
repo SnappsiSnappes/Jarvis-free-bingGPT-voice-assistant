@@ -38,17 +38,6 @@ python ai_launch_no_PVC.py
 - Возможность создавать свои команды - запускать свои файлы и открывать свои сайты - для этого используйте working_gui.py или working_gui.exe в корневом каталоге.
 - быстрая реакция, лучшее качество записи и воспроизведения, использованы лучшие бесплатные библиотеки.
 ### Список команд - в yaml документе commands.yaml 
-## Авто замена cookies.json
-- В случае ошибки установки связи с BingGPT - произойдет автоматическая замена cookies.json на новые. За это отвечает working_edge_update_cookies.py
-- Авто-замена cookies работает только от python 3.10 , то есть у тех у кого Windows 10 , тем у кого Windows 7 придется обновлять cookies.json раз в 12 часов.
-## принцип обновления cookies
-1) Выйдите из Microsoft EDGE браузера
-- запустите ai_launch.py или working_update_cookies.py
-- ![image](https://github.com/SnappsiSnappes/Jarvis-free-bingGPT-voice-assistant/assets/111605401/5bc7cfa2-cd24-40ae-8e9a-0d4bec9357ef)
-2) вы увидите в консоли Trying to update cookies 
-3) ждите 
-4) далее увидите в терминале много текста - значит все ок, cookies обновлены. Файл cookies.json создан
-Совет: на MS EDGE ставьте расширение впн - Browsec  - постоянно включенным.
 
 
 
@@ -60,6 +49,18 @@ python ai_launch_no_PVC.py
 5) Перейдите на домашнюю страницу Bing и нажмите кнопку "Export cookies" в формате json в буфер обмена.
 6) Создайте файл внутри директории со скриптом, назовите его - 'cookies.json' и вставьте свои куки в этот файл.
 7) Следуйте инструкциям Использование.
+
+## Авто замена cookies.json
+- В случае ошибки установки связи с BingGPT - произойдет автоматическая замена cookies.json на новые. За это отвечает working_edge_update_cookies.py
+- Авто-замена cookies работает только от python 3.10 , то есть у тех у кого Windows 10 , тем у кого Windows 7 придется обновлять cookies.json раз в 12 часов.
+## принцип обновления cookies
+1) Выйдите из Microsoft EDGE браузера
+- запустите ai_launch.py или working_update_cookies.py
+- ![image](https://github.com/SnappsiSnappes/Jarvis-free-bingGPT-voice-assistant/assets/111605401/5bc7cfa2-cd24-40ae-8e9a-0d4bec9357ef)
+2) вы увидите в консоли Trying to update cookies 
+3) ждите 
+4) далее увидите в терминале много текста - значит все ок, cookies обновлены. Файл cookies.json создан
+Совет: на MS EDGE ставьте расширение впн - Browsec  - постоянно включенным.
 
 ## Проблемы с правильной установкой ffmpeg
 1) Установите ffmpeg любым удобным для вас способом. https://ffmpeg.org/download.html
