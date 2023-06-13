@@ -1,4 +1,4 @@
-
+### Платформа - Windows 7 / 10 x64
 ## Установка и запуск
 - Имя пользователя Windows не должно содержать кирилицы.
 - Клонируйте репозиторий на свой компьютер.
@@ -41,8 +41,17 @@ python ai_launch_no_PVC.py
 ## Авто замена cookies.json
 - В случае ошибки установки связи с BingGPT - произойдет автоматическая замена cookies.json на новые. За это отвечает working_edge_update_cookies.py
 - Авто-замена cookies работает только от python 3.10 , то есть у тех у кого Windows 10 , тем у кого Windows 7 придется обновлять cookies.json раз в 12 часов.
+## принцип обновления cookies
+1) Выйдите из Microsoft EDGE браузера
+- запустите ai_launch.py или working_update_cookies.py
+- ![image](https://github.com/SnappsiSnappes/Jarvis-free-bingGPT-voice-assistant/assets/111605401/5bc7cfa2-cd24-40ae-8e9a-0d4bec9357ef)
+2) вы увидите в консоли Trying to update cookies 
+3) ждите 
+4) далее увидите в терминале много текста - значит все ок, cookies обновлены. Файл cookies.json создан
+Совет: на MS EDGE ставьте расширение впн - Browsec  - постоянно включенным.
 
-### Платформа - только Windows
+
+
 ## Инструкции
 1) Сначала зарегистрируйте учетную запись Microsoft и скачайте последнюю версию Microsoft Edge.
 2) Используйте VPN, если вы находитесь в России.
@@ -87,12 +96,3 @@ donate - https://www.donationalerts.com/r/snappes_tv
 
 ## Все файлы с приставкой working_... работают автономно, в их коде содержится подробное описание и принцип работы.
 По сути это файлы конструкторы, можете использовать их для своих программ
-
-## принцип обновления cookies
-1) Выйдите из Microsoft EDGE браузера
-- запустите ai_launch.py или working_update_cookies.py
-- ![image](https://github.com/SnappsiSnappes/Jarvis-free-bingGPT-voice-assistant/assets/111605401/5bc7cfa2-cd24-40ae-8e9a-0d4bec9357ef)
-2) вы увидите в консоли Trying to update cookies 
-3) ждите 
-4) далее увидите в терминале много текста - значит все ок, cookies обновлены. Файл cookies.json создан
-Совет: на MS EDGE ставьте расширение впн - Browsec  - постоянно включенным.
