@@ -1,6 +1,7 @@
 
 
 
+
 async def working_chat(conn):
     """
     1) сделайте pipe
@@ -8,7 +9,7 @@ async def working_chat(conn):
     
 while True:            
     ...
-    conn.send('запрос')     -1
+    conn.send('запрос')     -1 
     while True:
         if conn.poll():     -2
             response = conn.recv() -3
@@ -18,30 +19,54 @@ while True:
             break
         time.sleep(3) #<-или await asyncio.sleep(3)
     """
+    from multiprocessing import Process, Pipe
     from EdgeGPT import Chatbot
     import sys
     from numpy import argsort
     import asyncio
     from working_edge_update_cookies import working_edge_update_cookies
-
+    from modules.working_proxy_getter import proxy_file
+    from modules.working_reader_proxy import read_proxies
     """
     Main function
     """
-
+    # создание прокси файла, добавление прокси списка в переменную proxy_list
+    p1 = Process(target=proxy_file)
+    p1.start()
+    p1.join()
+    #proxy_file()
+    proxy_list = read_proxies()
     print("Initializing...")
     global bot
     bot = ''
-    try:
-        
-        bot = Chatbot(cookie_path='cookies.json')
-    except:
-        print('Cookies timout, trying to update cookies')
-        try:working_edge_update_cookies();
-        except:pass
+#!! start
+    for proxy in proxy_list:
         try:
-
+            bot = Chatbot(cookie_path='cookies.json', proxy=proxy)
+            break
+        except Exception as e:
+            print(f"Ошибка при использовании прокси {proxy}: {e}")
+    if not bot:
+        print('Все прокси не работают, пытаемся обновить cookies')
+        try:
+            working_edge_update_cookies()
             bot = Chatbot(cookie_path='cookies.json')
-        except: print('ПЕРЕЗАГРУЗИТЕ ДЖАРВИСА')
+        except Exception as e:
+            print(f"Ошибка при обновлении cookies: {e}")
+            print('ПЕРЕЗАГРУЗИТЕ ДЖАРВИСА')
+
+#!!
+    # try:
+        # 
+        # bot = Chatbot(cookie_path='cookies.json')
+    # except Exception as e:
+        # print('Я exception ============= ',e)
+        # print('Cookies timeout, trying to update cookies')
+        # try:
+            ##bot.reset()
+            # working_edge_update_cookies()
+            # bot = Chatbot(cookie_path='cookies.json')
+        # except: print('ПЕРЕЗАГРУЗИТЕ ДЖАРВИСА')
     
         
     while True:
