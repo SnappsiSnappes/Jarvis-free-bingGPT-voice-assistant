@@ -61,7 +61,7 @@ while True:
         except Exception as e:
             print(f"Ошибка при обновлении cookies: {e}")
             print('ПЕРЕЗАГРУЗИТЕ ДЖАРВИСА')
-
+    print('Успешное соединение')
 #!!
     # try:
         # 
@@ -75,7 +75,7 @@ while True:
             # bot = Chatbot(cookie_path='cookies.json')
         # except: print('ПЕРЕЗАГРУЗИТЕ ДЖАРВИСА')
     
-        
+    
     while True:
         await asyncio.sleep(5)
         if conn.poll(): # проверяем, есть ли данные для чтения
