@@ -40,17 +40,24 @@ while True:
     global bot
     bot = ''
 #!! start
-    for proxy in proxy_list:
-        try:
-            bot = Chatbot(cookie_path='cookies.json', proxy=proxy)
-            break
-        except Exception as e:
-            print(f"Ошибка при использовании прокси {proxy}: {e}")
+
+    def proxy_start_bot():
+        global bot
+        for proxy in proxy_list:
+            try:
+                bot = Chatbot(cookie_path='cookies.json', proxy=proxy)
+                break
+            except Exception as e:
+                print(f"Ошибка при использовании прокси {proxy}: {e}")
+
+    proxy_start_bot()
+
     if not bot:
         print('Все прокси не работают, пытаемся обновить cookies')
         try:
             working_edge_update_cookies()
-            bot = Chatbot(cookie_path='cookies.json')
+            proxy_start_bot()
+            #bot = Chatbot(cookie_path='cookies.json')
         except Exception as e:
             print(f"Ошибка при обновлении cookies: {e}")
             print('ПЕРЕЗАГРУЗИТЕ ДЖАРВИСА')
