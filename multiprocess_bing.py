@@ -2,6 +2,7 @@
 
 
 
+
 async def working_chat(conn):
     """
     1) сделайте pipe
@@ -24,56 +25,127 @@ while True:
     import sys
     from numpy import argsort
     import asyncio
+    import os
     from working_edge_update_cookies import working_edge_update_cookies
     from modules.working_proxy_getter import proxy_file
     from modules.working_reader_proxy import read_proxies
     """
     Main function
     """
-    # создание прокси файла, добавление прокси списка в переменную proxy_list
-    p1 = Process(target=proxy_file)
-    p1.start()
-    p1.join()
-    #proxy_file()
+    def append_stable_proxy_file(filename:str,proxy:str):
+        """ читает файл и если не находит строчку из параметра 
+         proxy - то добавляет ее в конец файла
+          - ### используется в случае успешного подключения """
+        proxy = proxy.replace('http://', '')
+        with open(filename, 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+            if proxy not in lines:
+                with open('proxies_stable.txt', 'a', encoding='utf-8') as file:
+                    file.write(proxy)
+
+    def remove_stable_proxy_file(filename:str,proxy:str):
+        """ ### используется для удаления строчки с нерабочим прокси
+        ### в параметры указать имя файла , и прокси """
+        with open(filename, 'r') as file:
+            lines = file.readlines()
+        with open(filename, 'w') as file:
+            for line in lines:
+                if line.strip("\n") != proxy:
+                    file.write(line)
+
+
+
+    def check_alive(filename):
+        """чек есть ли файл, если нет то создает пустой"""
+        if os.path.exists(f'{filename}') == False:
+            with open(f'{filename}',"a+",encoding='utf=8') as g: g.close()
+
+    check_alive('proxies_stable.txt')
+    
+    def create_proxy():
+        """создание прокси файла proxies.txt"""
+        p1 = Process(target=proxy_file)
+        p1.start()
+        p1.join()
+
+    create_proxy()
+
+    #добавление прокси списка в переменную proxy_list
     proxy_list = read_proxies()
+    stable_proxy_list = read_proxies('proxies_stable.txt')
     print("Initializing...")
+
     global bot
     bot = ''
-#!! start
+    
+    # идея в том чтобы сохранять стабильные прокси в отдельный файл
+
+    def proxy_start_bot_stable_proxy():
+        """
+        Пытается подключиться к боту используя стабильные прокси
+        стабильные прокси создаются если был успешный ответ от бота
+
+        """
+        global bot
+        
+        for proxy in stable_proxy_list:
+            try:
+                bot = Chatbot(cookie_path='cookies.json', proxy=proxy)
+                
+                break
+            except Exception as e:
+                if str(e) == 'Cookie file not found':
+                    print('пытаюсь обновить cookies')
+                    try:
+                        working_edge_update_cookies()
+                    except Exception as e:
+                        print(e,' Ошибка обновления cookies, обновите cookies самостоятельно.')
+                        sys.exit()
+                    continue
+                print(f"Ошибка при использовании прокси {proxy}: {e}")
+                proxy_without_http = proxy.replace('http://' , '') # удаляет 'http//' так как в файле proxies_stable.txt нет прифекса 'http//'  
+                remove_stable_proxy_file('proxies_stable.txt', proxy_without_http) # удаляем нестабильный прокси
+
 
     def proxy_start_bot():
+        """
+        Пытается подключиться к боту используя прокси
+        """
         global bot
         for proxy in proxy_list:
             try:
                 bot = Chatbot(cookie_path='cookies.json', proxy=proxy)
+                append_stable_proxy_file('proxies_stable.txt', f'{proxy}')
                 break
             except Exception as e:
+                if str(e) == 'Cookie file not found':
+                    print('пытаюсь обновить cookies')
+                    try:
+                        working_edge_update_cookies()
+                    except:
+                        print('Ошибка обновления cookies, обновите cookies самостоятельно.')
+                        sys.exit()
+                    continue
                 print(f"Ошибка при использовании прокси {proxy}: {e}")
-
-    proxy_start_bot()
+    proxy_start_bot_stable_proxy()
 
     if not bot:
-        print('Все прокси не работают, пытаемся обновить cookies')
-        try:
-            working_edge_update_cookies()
-            proxy_start_bot()
-            #bot = Chatbot(cookie_path='cookies.json')
-        except Exception as e:
-            print(f"Ошибка при обновлении cookies: {e}")
-            print('ПЕРЕЗАГРУЗИТЕ ДЖАРВИСА')
+        proxy_start_bot()
+    #!!
+    # if not bot:
+    #     print('Все прокси не работают, пытаемся обновить cookies')
+    #     try:
+    #         working_edge_update_cookies()
+    #         proxy_start_bot()
+    #         #bot = Chatbot(cookie_path='cookies.json')
+    #     except Exception as e:
+    #         print(f"Ошибка при обновлении cookies: {e}")
+    #         print('ПЕРЕЗАГРУЗИТЕ ДЖАРВИСА')
+    #!!
+    if not bot:
+        print("ПЕРЕЗАГРУЗИТЕ ДЖАРВИСА")
+    
     print('Успешное соединение')
-#!!
-    # try:
-        # 
-        # bot = Chatbot(cookie_path='cookies.json')
-    # except Exception as e:
-        # print('Я exception ============= ',e)
-        # print('Cookies timeout, trying to update cookies')
-        # try:
-            ##bot.reset()
-            # working_edge_update_cookies()
-            # bot = Chatbot(cookie_path='cookies.json')
-        # except: print('ПЕРЕЗАГРУЗИТЕ ДЖАРВИСА')
     
     
     while True:
@@ -109,6 +181,7 @@ while True:
                     #! print(response)
 
                     conn.send(response) # отправляем ответ в другой процесс
+
                 except: 
                     #! try:working_edge_update_cookies()
                     #! except:continue
