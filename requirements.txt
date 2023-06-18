@@ -23,7 +23,7 @@ rich==13.3.3
 pydub==0.25.1
 speechkit==2.2.2
 SpeechRecognition==3.10.0
-EdgeGPT==0.2.1
+EdgeGPT==0.2.0
 num2words==0.5.12
 numpy==1.23.5
 Levenshtein==0.20.9
