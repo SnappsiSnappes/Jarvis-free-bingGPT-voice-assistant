@@ -1,4 +1,5 @@
 ### Платформа - Windows 7 / 10 x64
+### python 3.10.6
 <details>
   <summary>Установка</summary>
   
