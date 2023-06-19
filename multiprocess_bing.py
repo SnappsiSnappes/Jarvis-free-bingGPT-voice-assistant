@@ -33,15 +33,13 @@ while True:
     """
     Main function
     """
-    #!!!
     # чтение конфига, для настройки стиля диалога с BingGPT
     # всего существует 3 тиля 'creative', 'balanced', 'precise'
     global config
     config = configparser.ConfigParser()
     config.read('config.ini')
     config_conversation_style = str(config.get('conversation_style','style'))
-    #!!!
-    print(config_conversation_style)
+
 
     def append_stable_proxy_file(filename:str,proxy:str):
         """ читает файл и если не находит строчку из параметра 
