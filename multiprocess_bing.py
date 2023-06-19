@@ -26,12 +26,23 @@ while True:
     from numpy import argsort
     import asyncio
     import os
+    import configparser
     from working_edge_update_cookies import working_edge_update_cookies
     from modules.working_proxy_getter import proxy_file
     from modules.working_reader_proxy import read_proxies
     """
     Main function
     """
+    #!!!
+    # чтение конфига, для настройки стиля диалога с BingGPT
+    # всего существует 3 тиля 'creative', 'balanced', 'precise'
+    global config
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    config_conversation_style = str(config.get('conversation_style','style'))
+    #!!!
+    print(config_conversation_style)
+
     def append_stable_proxy_file(filename:str,proxy:str):
         """ читает файл и если не находит строчку из параметра 
          proxy - то добавляет ее в конец файла
@@ -171,7 +182,7 @@ while True:
             if argsort:
                 try:
                     response = (
-                        (await bot.ask(prompt=prompt))["item"]["messages"][1]['text'],
+                        (await bot.ask(prompt=prompt,conversation_style=config_conversation_style))["item"]["messages"][1]['text'],
                         #!! ниже версия с карточками сайтов - ссылками
                     #   (await bot.ask(prompt=prompt))["item"]["messages"][1]["adaptiveCards"][
                         #     0
@@ -189,7 +200,7 @@ while True:
                     try:         
                         await bot.reset()           
                         response = (
-                        (await bot.ask(prompt=prompt))["item"]["messages"][1]['text'])
+                        (await bot.ask(prompt=prompt,conversation_style=config_conversation_style))["item"]["messages"][1]['text'])
                         #! print(response)
                         conn.send(response) # отправляем ответ в другой процесс
                     except: pass
@@ -211,6 +222,7 @@ while True:
             
 
     await bot.close()
+    working_chat(conn=conn)
 
 # if __name__ == "__main__":
 #      asyncio.run(main())
