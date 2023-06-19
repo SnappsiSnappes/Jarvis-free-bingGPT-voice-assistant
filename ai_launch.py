@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
 import asyncio
 import re
+from numpy import unicode_
 import vosk
 import json
 import os
@@ -25,7 +27,7 @@ from rich import print
 from working_tts import working_tts
 from pydub import playback
 import speech_recognition as sr
-from EdgeGPT import Chatbot, ConversationStyle
+from EdgeGPT import Chatbot #ConversationStyle
 import datetime
 from num2words import num2words
 from transliterate import translit, get_available_language_codes
@@ -286,6 +288,7 @@ async def gpt_answer(text: str,conn,bug=None):
                 print('response- ',response)
 
                 bot_response = response
+            
                 bot_response = re.sub('\[\^\d+\^\]', '', bot_response)
                 bot_response = bot_response.replace('привет, это Bing',' вот что я нашел в интернете ')
                 bot_response = bot_response.replace('Здравствуйте, это Bing','вот что я нашел ')
