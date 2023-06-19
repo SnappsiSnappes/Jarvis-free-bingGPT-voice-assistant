@@ -6,7 +6,7 @@
 # нажмите enter чтобы отправить сообщение и дождитесь ответа
 import os
 from multiprocessing import Process, Pipe
-
+import time
 import asyncio
 from tabnanny import check
 from EdgeGPT import Chatbot
@@ -22,10 +22,15 @@ from numpy import argsort
 # в conifg.ini  
 #   [conversation_style]
 #   style = creative
-config = configparser.ConfigParser()
-config.read('config.ini')
-config_conversation_style = str(config.get('conversation_style','style'))
-
+try:
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    config_conversation_style = str(config.get('conversation_style','style'))
+except:
+    print('''создайте config.int в директории с скриптом и добавьте в него две строчки 
+        [conversation_style]
+        style = creative''')
+    pass
 
 async def main():
     """
@@ -115,8 +120,12 @@ async def main():
 
     if not bot:
         proxy_start_bot()
+    if not bot:
+        while True:
+            time.sleep(5)
+            print('Соединение не установлено, выключите скрипт')
     #!!
-    bot = Chatbot(cookie_path='cookies.json',proxy='http://18.143.215.49:80')
+    print('---- успешное соединение ----')
     while True:
         prompt = input("\nYou:\n")
         if prompt == "!exit":
@@ -135,7 +144,10 @@ async def main():
             continue
         print("Bot:")
         if argsort:
-            print(
+            if config_conversation_style:
+                print((await bot.ask(prompt=prompt,conversation_style=config_conversation_style))["item"]["messages"][1]["adaptiveCards"][0]["body"][0]["text"],)
+            else:
+                print(
                 (await bot.ask(prompt=prompt))["item"]["messages"][1]["adaptiveCards"][
                     0
                 ]["body"][0]["text"],
