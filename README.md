@@ -91,13 +91,13 @@ python ai_launch_no_PVC.py
 2) быстрый способ - Установите Chocolately, используя этот код в PowerShell:```
 Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))```
 Затем, используя PowerShell, выполните: ```choco install ffmpeg```
-3) https://www.youtube.com/watch?v=jZLqNocSQDM посмотрите видео инструкцию
+3) другой способ : https://www.youtube.com/watch?v=jZLqNocSQDM посмотрите видео инструкцию
 </details>
 
 <details>
 <summary>Использование</summary>
   
-- Замените ключ в config.cfg - [PICOVOICE_TOKEN]  на свой API-ключ. (зарегестрируйтесь на https://console.picovoice.ai ,чтобы получить его бесплатно)
+- Замените ключ в config.ini - [PICOVOICE_TOKEN]  на свой API-ключ. (зарегестрируйтесь на https://console.picovoice.ai ,чтобы получить его бесплатно)
 - Запустите скрипт ai_launch.py
 - Скажите Джарвис -  чтобы разбудить бота.
 - Ваш запрос начинается на - "Скажи","Расскажи" - тогда Джарвис пойдет в интернет и спросит у BingGPT ответ на ваш запрос, во время запроса можно сказать слово ОТМЕНА - чтобы отменить. Если у вас ошибка - "Перезагрузите джарвиса" или какая то иная, проверьте создали ли вы cookies.json
