@@ -28,7 +28,7 @@ try:
     config.read('config.ini')
     config_conversation_style = str(config.get('conversation_style','style'))
 except:
-    print('''создайте config.int в директории с скриптом и добавьте в него две строчки 
+    print('''создайте config.ini в директории с скриптом и добавьте в него две строчки 
         [conversation_style]
         style = creative''')
     pass
