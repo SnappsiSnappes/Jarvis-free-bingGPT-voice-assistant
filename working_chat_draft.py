@@ -22,6 +22,7 @@ from numpy import argsort
 # в conifg.ini  
 #   [conversation_style]
 #   style = creative
+config_conversation_style = ''
 try:
     config = configparser.ConfigParser()
     config.read('config.ini')
