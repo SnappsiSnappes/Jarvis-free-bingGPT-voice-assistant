@@ -1,12 +1,12 @@
 
-# это таймер
-# импортируешь его и ставишь декоратор над
-# любой функцией @timer
-# получишь print результат в секундах
-
-import time
-
 def timer(func):
+    """```
+    - это таймер
+    - импортируешь его и ставишь декоратор над
+    - любой функцией @timer
+    - получишь print результат в секундах
+    """
+    import time
     def wrapper(*args, **kwargs):
         start = time.time()
         result = func(*args, **kwargs)
