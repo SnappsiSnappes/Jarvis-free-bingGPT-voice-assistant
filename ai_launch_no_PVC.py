@@ -26,7 +26,7 @@ from rich import print
 from working_tts import working_tts
 from pydub import playback
 import speech_recognition as sr
-from EdgeGPT import Chatbot, ConversationStyle
+from EdgeGPT import Chatbot #ConversationStyle
 import datetime
 from num2words import num2words
 from transliterate import translit, get_available_language_codes
