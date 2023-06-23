@@ -40,3 +40,4 @@ selenium-stealth==1.0.6
 msedge-selenium-tools==3.141.4
 edgedriver-autoinstaller==0.2.1
 nest-asyncio==1.5.6
+langid==1.1.6
