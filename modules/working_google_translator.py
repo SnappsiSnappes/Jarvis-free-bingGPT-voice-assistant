@@ -10,14 +10,14 @@ def tranlastor(text,from_lang:str='en',to_lang:str='ru') -> str:
     - работает очень быстро = ``в среднем 0.09 секунд``
     - может обрабатывать список, словарь, строку = ``Возвращает список , словарь, строку``
     '''
-    from working_symbols_to_list import split_string
+    from modules.working_symbols_to_list import split_string
     # лимит в день  => from translate import Translator
     # не работает => from googletrans import Translator
     from translatepy import Translator
     
-    # проверка на длину, если больше 500 то будет список
-    if len(text) > 500:
-        text = split_string(text,500)
+    ## проверка на длину, если больше 500 то будет список
+    #if len(text) > 500:
+    #    text = split_string(text,500)
     
 
     translator= Translator()
@@ -32,14 +32,14 @@ def tranlastor(text,from_lang:str='en',to_lang:str='ru') -> str:
         return response
 
     elif type(text) == str:
-        if len(text) > 500:
-            response = []
-            text = split_string(text,500)
-            for i in text:
-                i = translator.translate(i,to_lang)
-                i = str(i)
-                response.append(i)            
-        else:
+        #if len(text) > 500:
+        #    response = []
+        #    text = split_string(text,500)
+        #    for i in text:
+        #        i = translator.translate(i,to_lang)
+        #        i = str(i)
+        #        response.append(i)            
+        #else:
             response = translator.translate(text,to_lang)
             response = str(response)
             return response
