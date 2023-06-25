@@ -29,7 +29,6 @@ import speech_recognition as sr
 from EdgeGPT import Chatbot #ConversationStyle
 import datetime
 from num2words import num2words
-from transliterate import translit, get_available_language_codes
 import configparser
 import click
 import sqlite3
@@ -41,6 +40,7 @@ from multiprocess_bing import working_chat
 from multiprocess_wake_word_recognition_no_PVC import main123
 from working_getter_from_db import working_getter_from_db
 from google_rec_no_PVC import google_rec
+from working_numbers_to_words import numbers_to_wards
 
 # play(f'{CDIR}\\sound\\ok{random.choice([1, 2, 3, 4])}.wav')
 async def play(phrase, wait_done=True):
@@ -146,16 +146,6 @@ async def execute_cmd(cmd: str, voice: str):
 
 
 
-def replace_numbers_with_words(text):
-    # Находим все числа в тексте с помощью регулярного выражения
-    pattern = re.compile(r'\d+')
-    numbers = pattern.findall(text)
-    
-    # Заменяем числа на слова с помощью num2words
-    for number in numbers:
-        word = num2words(int(number), lang='ru')
-        text = text.replace(number, word)
-    return text
 
 
 async def listen_for_cancel():
@@ -305,7 +295,6 @@ async def gpt_answer(text: str,conn,bug=None):
                 bot_response = bot_response.replace('Привет',' ')
                 bot_response = bot_response.replace('Привет,',' ')
                 bot_response = bot_response.replace('это Bing',' ')
-                bot_response = translit(bot_response, 'ru')
                 
                 pogoda = ['погода','градус', "погоду","градусов","градус","погод"]
                 for word in pogoda:
@@ -319,14 +308,13 @@ async def gpt_answer(text: str,conn,bug=None):
                     p1.terminate()
                     return
                 #!!
-                replaced_numbers = replace_numbers_with_words(bot_response)
 
 
                 len_of_texts=len(list_of_text)
 
                 
                 dd = dd+1
-                d.update({dd: [text,replaced_numbers]})
+                d.update({dd: [text,bot_response]})
 
                 canceled = check_for_cancel()
                 if canceled == True:break

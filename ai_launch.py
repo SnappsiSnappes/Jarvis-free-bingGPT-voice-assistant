@@ -30,7 +30,6 @@ import speech_recognition as sr
 from EdgeGPT import Chatbot #ConversationStyle
 import datetime
 from num2words import num2words
-from transliterate import translit, get_available_language_codes
 import configparser
 import click
 import sqlite3
@@ -40,11 +39,16 @@ from multiprocessing import Process, Pipe
 from multiprocess_bing import working_chat
 from multiprocess_wake_word_recogintion import wake_word_recognition
 from working_getter_from_db import working_getter_from_db
+from working_numbers_to_words import numbers_to_wards
 
 
 # play(f'{CDIR}\\sound\\ok{random.choice([1, 2, 3, 4])}.wav')
 async def play(phrase, wait_done=True):
-    
+    ''' ```
+    Функция проигрывает заранее записаный
+    звуковой файл. Находит аудиофайлы в папке sound
+    - phrase = читает фразы в файле commands.yaml 
+    если находи совпадение то проигрывает соответствующий аудио-файл'''
     global recorder
     recorder.stop()
     filename = f"{CDIR}\\sound\\"
@@ -96,6 +100,15 @@ async def play(phrase, wait_done=True):
 
 
 async def custum_command(voice):
+    ''' ```
+    запускает команды пользователя, 
+    ищет совпадения в базе данных, используя модуль 
+    - геттер working_getter_from_db(text=voice)
+    который в свою очередь использует fuzzywozzy чтобы найти 
+    совпадения в базе данных.
+    Исполняет команду следующим образом - запускает файл или открывает страницу в браузере
+    с помощью модуля click.launch()
+    '''
     if 'скажи' in voice:return False
     #if 'запусти' not in voice and 'открой' not in voice:
     #    
@@ -112,6 +125,10 @@ async def custum_command(voice):
 
 
 async def execute_cmd(cmd: str, voice: str):
+    '''```
+    устаревшая функция - выполнение команд
+    
+    '''
     recorder.stop()
 
 
@@ -147,16 +164,6 @@ async def execute_cmd(cmd: str, voice: str):
 
 
 
-def replace_numbers_with_words(text):
-    # Находим все числа в тексте с помощью регулярного выражения
-    pattern = re.compile(r'\d+')
-    numbers = pattern.findall(text)
-    
-    # Заменяем числа на слова с помощью num2words
-    for number in numbers:
-        word = num2words(int(number), lang='ru')
-        text = text.replace(number, word)
-    return text
 
 
 async def listen_for_cancel():
@@ -246,7 +253,24 @@ async def vosk_listen_for_cancel():
 def split_string(s):
     return [s[i:i+1000] for i in range(0, len(s), 1000)]
 
+
+
+
+#! bard
 async def gpt_answer(text: str,conn,bug=None):
+    '''```
+    - Основная функция запросов с BingGPT
+    - Связан через Pipe с multiprocess_bing.py
+    - Запускает через Pipe процесс wake_word_recognition который слушает слово 'ОТМЕНА', - в случае успеха , отменяется запрос
+    1) сначала сам отправляет текст запроса
+    2) получает ответ от multiprocess_bing.py
+    3) фильтрует текст
+    4) Озвучивает текст
+    ```
+    ### - `text` = текст запроса
+    ### - `conn` = соединение с multiprocess_bing.py
+    ### - `bug` = возникает баг, суть бага - вместо ответа получает строку длинной 1 символ в случае возникновения бага, запрос повторяется
+    '''
     global dd
     global d
     global recorder, ltc
@@ -296,7 +320,7 @@ async def gpt_answer(text: str,conn,bug=None):
                 bot_response = bot_response.replace('Привет',' ')
                 bot_response = bot_response.replace('Привет,',' ')
                 bot_response = bot_response.replace('это Bing',' ')
-                bot_response = translit(bot_response, 'ru')
+                
                 
                 pogoda = ['погода','градус', "погоду","градусов","градус","погод"]
                 for word in pogoda:
@@ -310,13 +334,12 @@ async def gpt_answer(text: str,conn,bug=None):
                     p1.terminate()
                     return
                 #!!
-                replaced_numbers = replace_numbers_with_words(bot_response)
 
                 len_of_texts=len(list_of_text)
 
                 
                 dd = dd+1
-                d.update({dd: [text,replaced_numbers]})
+                d.update({dd: [text,bot_response]})
 
 
                 canceled = check_for_cancel()
@@ -342,7 +365,7 @@ async def gpt_answer(text: str,conn,bug=None):
             continue
         
 async def recognize_cmd(cmd: str):
-    """
+    """```
     берет значения(не ключи) из yaml и 
     фильтрует через fuzz.raio.
     фильтрует их на совпадение с запросом,
@@ -353,8 +376,7 @@ async def recognize_cmd(cmd: str):
     наимбольшим процентом и с значением
     процента совпадения
     например на запрос - 
-    "открыть браузер" будет: 
-    {'cmd': 'open_browser', 'percent': 100}
+    "открыть браузер" будет: {'cmd': 'open_browser', 'percent': 100}
     """
     rc = {'cmd': '', 'percent': 0}
     for c, v in VA_CMD_LIST.items():
@@ -369,7 +391,7 @@ async def recognize_cmd(cmd: str):
 
 
 async def filter_cmd(raw_voice: str):
-    """
+    """```
     удаляет слова из запроса:
     'джарвис', 'скажи', 'покажи', 'ответь', 'произнеси', 'расскажи', 'сколько', 'слушай'
     """
@@ -546,6 +568,7 @@ def main_starter(conn):
     asyncio.run(main(conn))
 
 if __name__ == "__main__":
+
     parent_conn, child_conn = Pipe()
     p1 = Process(target=main_starter, args=(parent_conn,))
     p2 = Process(target=working_chat_starter, args=(child_conn,))
