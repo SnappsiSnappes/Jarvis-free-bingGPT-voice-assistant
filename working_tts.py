@@ -1,57 +1,81 @@
-# Это мой любимый скрипт, он использует модуль silero чтобы озвучивать текст
-# Чтобы использовать этот скрипт - спуститесь вниз кода и введите 
-# В параметры функции строку с текстом который хотите озвучить
-# Лимит 1000 символов. Так же на строчке 15 - вы можете изменить голос спикера
-# Все доступные голоса написаны на 16 строчке
-
 def working_tts(text):
+    '''```
+    Лучший модуль.
+    - text = строка, любой длинны. 
+    Если больше 1000 символов то будет разделение на список
+    из элементов по 1000 символов и будет озвучено
+    - можно выбрать голос озвучки
+    >>> speaker = 'eugene' 
+    # aidar, baya, kseniya, xenia, eugene, random
+    '''
+    # Импортируем необходимые библиотеки
     import torch
     import sounddevice as sd
     import time
-    language    = 'ru'
-
-    model_id    = 'v3_1_ru'
+    from silero import silero_stt, silero_tts, silero_te
+    from modules.working_symbols_to_list import split_string
+    # Устанавливаем параметры для TTS
+    language = 'ru'
+    model_id = 'v3_1_ru'
     sample_rate = 48000
-    speaker     = 'eugene'
-    #aidar, baya, kseniya, xenia, eugene, random
-    put_accent  = True
-    put_yo      = True
-    device      = torch.device('cpu')
+    speaker = 'eugene'  # aidar, baya, kseniya, xenia, eugene, random
+    put_accent = True
+    put_yo = True
+    device = torch.device('cpu')
 
-    if isinstance(text, str):
-        pass
+    
 
-    model, _                              = torch.hub.load(repo_or_dir='snakers4/silero-models',
-                            model         = 'silero_tts',language=language,speaker=model_id)
+    
+    # Загружаем модель TTS из репозитория snakers4/silero-models
+    model, _ = torch.hub.load(repo_or_dir='snakers4/silero-models',
+                              model='silero_tts', language=language, speaker=model_id)
     model.to(device)
-    audio                                 = model.apply_tts(text=text,
-                            speaker       = speaker,
-                            sample_rate   = sample_rate,
-                            put_accent    = put_accent,
-                            put_yo        = put_yo)
 
-    #print(text)
 
-    sd.play(audio,sample_rate)
-    time.sleep(len(audio)/sample_rate)
-    sd.stop
+
+    if len(text) >1000:
+        text = split_string(text,1000)
+        for i in text:
+            
+            audio = model.apply_tts(text=i,
+                            speaker=speaker,
+                            sample_rate=sample_rate,
+                            put_accent=put_accent,
+                            put_yo=put_yo)
+            sd.play(audio, sample_rate)
+            time.sleep(len(audio) / sample_rate)
+            sd.stop
+    else:
+        # Применяем TTS к тексту и получаем аудиоданные
+        audio = model.apply_tts(text=text,
+                            speaker=speaker,
+                            sample_rate=sample_rate,
+                            put_accent=put_accent,
+                            put_yo=put_yo)
+        # Воспроизводим аудиоданные с помощью sounddevice
+        sd.play(audio, sample_rate)
+        time.sleep(len(audio) / sample_rate)
+        sd.stop
+
 
 if __name__ == '__main__':
-    working_tts('произнесите команду ДЖААрвИс, чтобы продолжить...')
+    working_tts("""
+    Когда человек сознательно или интуитивно выбирает себе в жизни какую-то цель, жизненную задачу, он невольно дает себе оценку. По тому, ради чего человек живет, можно судить и о его самооценке - низкой или высокой.
+    Если человек живет, чтобы приносить людям добро, облегчать их страдания, давать людям радость, то он оценивает себя на уровне этой своей человечности. Он ставит себе цель, достойную человека.Только такая цель позволяет человеку прожить свою жизнь с достоинством и получить настоящую радость. Да, радость! Подумайте: если человек ставит себе задачей увеличивать в жизни добро, приносить людям счастье, какие неудачи могут его постигнуть? Не тому помочь? Но много ли людей не нуждаются в помощи?
 
-   #? if phrase == "greet":  # for py 3.8
-   #?     filename += f"greet{random.choice([1, 2, 3])}.wav"
-   #? elif phrase == "ok":
-   #?     filename += f"ok{random.choice([1, 2, 3])}.wav"
-   #? elif phrase == "not_found":
-   #?     filename += "not_found.wav"
-   #? elif phrase == "thanks":
-   #?     filename += "thanks.wav"
-   #? elif phrase == "run":
-   #?     filename += "run.wav"
-   #? elif phrase == "stupid":
-   #?     filename += "stupid.wav"
-   #? elif phrase == "ready":
-   #?     filename += "ready.wav"
-   #? elif phrase == "off":
-   #?     filename += "off.wav"
+Если жить только для себя, своими мелкими заботами о собственном благополучии, то от прожитого не останется и следа. Если же жить для других, то другие сберегут то, чему служил, чему отдавал силы.
+
+Можно по-разному определять цель своего существования, но цель должна быть. Надо иметь и принципы в жизни. Одно правило в жизни должно быть у каждого человека, в его цели жизни, в его принципах жизни, в его поведении: надо прожить жизнь с достоинством, чтобы не стыдно было вспоминать.
+
+Достоинство требует доброты, великодушия, умения не быть эгоистом, быть правдивым, хорошим другом, находить радость в помощи другим.
+
+Ради достоинства жизни надо уметь отказываться от мелких удовольствий и немалых тоже… Уметь извиняться, признавать перед другими ошибку - лучше, чем врать.
+
+Обманывая, человек прежде всего обманывает самого себя, ибо он думает, что успешно соврал, а люди поняли и из деликатности промолчали.
+
+Жизнь - прежде всего творчество, но это не значит, что каждый человек, чтобы жить, должен родиться художником, балериной или ученым. Можно творить просто добрую атмосферу вокруг себя. Человек может принести с собой атмосферу подозрительности, какого-то тягостного молчания, а может внести сразу радость, свет. Вот это и есть творчество.
+
+ 
+
+
+    """)
