@@ -1,16 +1,75 @@
+# -*- coding: utf-8 -*-
 
-#модуль использует Google переводчик
-#
-#Лимит = 500 символов
-#в среднем 1.35 секунд для 500 символов
-from translate import Translator
-#from working_timer import timer
-#@timer
-def tranlastor(text):
-    translator= Translator(to_lang="ru")
-    response = translator.translate(text)
-    print(response)
+# from working_timer import timer
+# @timer
+def tranlastor(text,from_lang:str='en',to_lang:str='ru') -> str:
+    '''
+    - модуль = ``translatepy``
+    - модуль использует Google переводчик
+    - любая длинна строки
+    - работает очень быстро = ``в среднем 0.09 секунд``
+    - может обрабатывать список, словарь, строку = ``Возвращает список , словарь, строку``
+    '''
+    from working_symbols_to_list import split_string
+    # лимит в день  => from translate import Translator
+    # не работает => from googletrans import Translator
+    from translatepy import Translator
+    
+    # проверка на длину, если больше 500 то будет список
+    if len(text) > 500:
+        text = split_string(text,500)
+    
+
+    translator= Translator()
+
+    if type(text) == list:
+        response = []
+        for i in text:
+            i = str(i)
+            i = translator.translate(i,to_lang)
+            i = str(i)
+            response.append(i)
+        return response
+
+    elif type(text) == str:
+        if len(text) > 500:
+            response = []
+            text = split_string(text,500)
+            for i in text:
+                i = translator.translate(i,to_lang)
+                i = str(i)
+                response.append(i)            
+        else:
+            response = translator.translate(text,to_lang)
+            response = str(response)
+            return response
+        
+    elif type(text) == dict:
+        response = {}
+        for key,i in text.items():
+            # Translate value
+            i = translator.translate(i,to_lang)
+            i = str(i)
+            
+            # Translate key
+            new_key = translator.translate(key,to_lang)
+            new_key = str(new_key)
+            key = new_key
+            # Add translated key-value pair to response
+            response[new_key] = i
+        return response
+
+
+    else:
+        print(type(text))
+        raise Exception('Text is not list, or str, or dict')
+    response = str(response)
     return response
 
 if __name__ == '__main__':
-    tranlastor(text='''hi''')
+    x = tranlastor(text=['привет','бард'],from_lang='ru',to_lang='en')
+    print('list ',x, f' type of x = {type(x)}')
+    y = tranlastor(text={'привет':'бард'},from_lang='ru',to_lang='en')
+    print('dict ',y, f' type of y = {type(y)}')
+    z = tranlastor(text=''' привет бааааааааааааард ''',from_lang='ru',to_lang='en')
+    print('str ',z, f' type of z = {type(z)}')

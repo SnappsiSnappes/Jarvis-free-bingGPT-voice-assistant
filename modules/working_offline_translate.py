@@ -4,14 +4,26 @@
 # 2.34 секунд в среднем
 # 3.17 секунд = 841 символов 
 # 3.82 сек = 1175 символов
-from working_timer import timer
-@timer
-def offline_translator(text=str):
+#from working_timer import timer
+#@timer
+def offline_translator(text=str, from_lang:str='en',to_lang:str='ru'):
+    """
+    ### Офлайн переводчик 
+    чтобы использовать:
+    1) в параметры введите текст для перевода
+    2) from_lang = 'ru' пример
+    3) to_lang = 'en' пример
+    - без лимита на длину строчки
+    - 2.26 секунд = 1 слово 'hi'
+    - 2.34 секунд в среднем
+    - 3.17 секунд = 841 символов 
+    - 3.82 сек = 1175 символов
+    """
     import argostranslate.package
     import argostranslate.translate
 
-    from_code = "en"
-    to_code = "ru"
+    from_code = from_lang
+    to_code = to_lang
 
     # Download and install Argos Translate package
     argostranslate.package.update_package_index()

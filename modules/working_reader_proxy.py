@@ -7,6 +7,10 @@
 # пробелы и знак /n игнорирует
 
 def read_proxies(filename='proxies.txt'):
+    '''
+    1)Читает прокси из параметра filename, по умолч. = proxies.txt
+    2)Возвращает словарь из прокси. пример [http://123456:80, ...]
+    '''
     with open(filename, 'r') as f:
         lines = f.readlines()
     proxies = ['http://' + line.strip() for line in lines if line.strip()]
