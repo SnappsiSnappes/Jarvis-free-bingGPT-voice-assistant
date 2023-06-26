@@ -40,3 +40,4 @@ vosk==0.3.45
 websocket_client==1.5.1
 websockets==10.4
 whisper==1.1.10
+httpx==0.24.1
