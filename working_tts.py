@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 
 
 def working_tts(text:str):
