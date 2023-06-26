@@ -10,7 +10,10 @@ def tranlastor(text,from_lang:str='en',to_lang:str='ru') -> str:
     - работает очень быстро = ``в среднем 0.09 секунд``
     - может обрабатывать список, словарь, строку = ``Возвращает список , словарь, строку``
     '''
-    from modules.working_symbols_to_list import split_string
+    try:
+        from modules.working_symbols_to_list import split_string
+    except:
+        from working_symbols_to_list import split_string
     # лимит в день  => from translate import Translator
     # не работает => from googletrans import Translator
     from translatepy import Translator    
