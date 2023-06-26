@@ -40,8 +40,7 @@ from multiprocess_bing import working_chat
 from multiprocess_wake_word_recogintion import wake_word_recognition
 from working_getter_from_db import working_getter_from_db
 from working_numbers_to_words import numbers_to_wards
-from bard_chat import bard_msg
-
+from bard_chat_multiprocess import bard_msg
 
 # play(f'{CDIR}\\sound\\ok{random.choice([1, 2, 3, 4])}.wav')
 async def play(phrase, wait_done=True):
@@ -257,15 +256,30 @@ def split_string(s):
 
 
 
-#! bard
-async def bard_answer(text:str):
+#!! bard
+async def bard_answer(text:str,conn):
     global recorder
     recorder.stop()
     await play('internet')
     recorder.stop()
-    response = bard_msg(text)
-    print(response)
-    working_tts(response)
+    conn.send(text)
+    canceled = False
+    while not canceled:
+
+        while True:
+            if conn.poll():
+                response = conn.recv()
+                print('\nОтвет:',response)
+                working_tts(response)
+                canceled = True
+                return True
+            else:
+                await asyncio.sleep(5)
+                recorder.stop()
+    
+        
+    
+
 
 async def gpt_answer(text: str,conn,bug=None):
     '''```
@@ -420,6 +434,7 @@ async def va_respond(voice: str,conn):
     global message_log
     global first_request
     global dd
+    global choose_ai_model
     print(f"Распознано: {voice}")
     recorder.stop()
 
@@ -451,7 +466,7 @@ async def va_respond(voice: str,conn):
             if choose_ai_model == 'bing':
                 await gpt_answer(voice,conn)
             else:
-                await bard_answer(voice)
+                await bard_answer(voice,conn)
 
 
 
@@ -475,7 +490,7 @@ async def va_respond(voice: str,conn):
 async def main(conn):
     
     global ltc
-    
+    global choose_ai_model
     global canceled
     global list_of_text
     global CDIR,VA_ALIAS,VA_CMD, recognizer,VA_NAME
@@ -578,30 +593,38 @@ async def main(conn):
             print(f"Unexpected {err=}, {type(err)=}")
             raise
 
-def working_chat_starter(conn):
+def bing_starter(conn):
     asyncio.run(working_chat(conn))
 
-def main_starter(conn=None):
-    asyncio.run(main(conn=None))
+def main_starter(conn):
+    asyncio.run(main(conn))
+
+def bard_starter(conn):
+    asyncio.run(bard_msg(conn))
 
 if __name__ == "__main__":
+    # чтение config.ini
     global config
     config = configparser.ConfigParser()
     config.read('config.ini')
     # bard / bing
     global choose_ai_model
     choose_ai_model = config.get('ai','model') # bard / bing
-
+    # если пользователь выбрал bing, то запускается bing_starter, иначе запускается bard_starter
     if choose_ai_model == 'bing':
         parent_conn, child_conn = Pipe()
         p1 = Process(target=main_starter, args=(parent_conn,))
-        p2 = Process(target=working_chat_starter, args=(child_conn,))
+        p2 = Process(target=bing_starter, args=(child_conn,))
         p1.start()
         p2.start()
         p1.join()
         p2.join()
     else:
-        p1 = Process(target=main_starter)
+        parent_conn,child_conn = Pipe()
+        p1 = Process(target=main_starter, args=(parent_conn,))
+        p2 = Process(target=bard_starter, args=(child_conn,))
+        p2.start()
         p1.start()
+        p2.join()
         p1.join()
 
