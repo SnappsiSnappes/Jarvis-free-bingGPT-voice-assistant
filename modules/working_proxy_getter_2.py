@@ -3,14 +3,14 @@
 # достать ее можно:
 # random_func = proxy_getter()
 # print(random_func[1])
-import asyncio
-from proxybroker import Broker
+
 
 #from working_timer import timer
 #@timer
 # 0.59 sec, 0.69 sec
 def proxy_getter():
-
+    import asyncio
+    from proxybroker2 import Broker
     async def get_proxies(proxies):
         """Get a proxy and return it as a string."""
         proxy = await proxies.get()

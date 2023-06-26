@@ -11,7 +11,7 @@ def proxy_file(filename:str='proxies.txt',amount:int=10):
     amount = количество прокси, по умолчанию 10
     '''
     import asyncio
-    from proxybroker import Broker
+    from proxybroker2 import Broker
     async def save(proxies, filename):
         """Save proxies to a file."""
         with open(filename, 'w') as f:
