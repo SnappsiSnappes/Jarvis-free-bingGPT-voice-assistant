@@ -62,4 +62,3 @@ if __name__ == '__main__':
     print('dict ',y, f' type of y = {type(y)}')
     z = tranlastor(text=''' привет бааааааааааааард ''',from_lang='ru',to_lang='en')
     print('str ',z, f' type of z = {type(z)}')
-

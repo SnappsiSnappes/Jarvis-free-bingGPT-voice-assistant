@@ -73,7 +73,7 @@ async def start_bot(token:str):
         proxy_list = read_proxies()
         stable_proxy_list = read_proxies('proxies_stable.txt')
 
-        print("Initializing...")
+        print("\nInitializing...")
         global bot
         bot=''
 
