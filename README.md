@@ -19,7 +19,7 @@ pip install -r requirements2.txt
 Если видите ошибки то разберитесь с ними и установити зависимости. Проблемный модуль - PyAudio
 Требуется много зависимостей связанных с C++ Redist, и прочие. К сожалению пока так.
 - установите ffmpeg корректным образом, внизу есть пояснение
-- отредактируйте config.ini 
+- отредактируйте config.ini и выберите модель bard/bing
 - запуск
 ```
 python ai_launch.py
@@ -54,9 +54,10 @@ python ai_launch_no_PVC.py
 
 <details>
   <summary>Инструкции Bard</summary>
-  приемущества : легко, быстро
-  недостатки : из за перевода происходит неграмотный ответ , используется двойной перевод. 
   
+- ``приемущества :`` легко, быстро
+- ``недостатки :`` из за перевода происходит неграмотный ответ , используется двойной перевод. 
+
   1) Зайдите на сайт , используя впн , получите доступ к барду , используя свой гугл аккаунт - https://bard.google.com/?hl=en ![image](https://github.com/SnappsiSnappes/Jarvis-free-bingGPT-voice-assistant/assets/111605401/1a908389-6356-4c2b-a674-3576a74a34d6)
   2) вставьте токен в config.ini - [bard_token] token = ![image](https://github.com/SnappsiSnappes/Jarvis-free-bingGPT-voice-assistant/assets/111605401/a3c6d1c5-3c68-4f07-92ce-cf5b08c90713)
 
@@ -65,6 +66,9 @@ python ai_launch_no_PVC.py
 
 <details>
   <summary>Инструкции Bing</summary>
+
+- ``Приемущества:`` Качественные ответы, креатив, грамотность
+- ``Недостатки:`` Необходимость установки MS EDGE браузера, учетная запись Microosft, ВПН, необходимость обновлять cookies раз в 12 часов, нестабильность работы в последнее время. Долгое время ожидания ответа.
   
 1) Сначала зарегистрируйте учетную запись Microsoft и скачайте последнюю версию Microsoft Edge.
 2) Используйте VPN, если вы находитесь в России. (РАСШИРЕНИЕ BROWSEC: https://chrome.google.com/webstore/detail/browsec-vpn-free-vpn-for/omghfjlpggmjjaagoclmmobgdodcjboh)
