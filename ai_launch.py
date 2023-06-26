@@ -258,6 +258,7 @@ def split_string(s):
 
 #!! bard
 async def bard_answer(text:str,conn):
+    text = f'{text}, {config.get("add_to_prompt","add_to_prompt")}'
     global recorder
     recorder.stop()
     await play('internet')
@@ -513,7 +514,7 @@ async def main(conn):
     # Токен Picovoice
     global config
     config = configparser.ConfigParser()
-    config.read('config.ini')
+    config.read('config.ini',encoding='utf-8')
 
     # bard / bing
     global choose_ai_model

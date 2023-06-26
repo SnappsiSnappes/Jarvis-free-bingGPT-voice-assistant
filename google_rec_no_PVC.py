@@ -1,7 +1,7 @@
-# Простой скрипт, используется модуль от Google
-# для распознования речи, в параметрах функции указывается
-# строка - слово - услышав которое будет инициирован выход из цикла While True
-# и программа завершится
+# -*- coding: utf-8 -*-
+
+
+
 async def google_rec(target:str):
     
     import asyncio
@@ -15,7 +15,7 @@ async def google_rec(target:str):
     print('Произнесите - Джарвис')
     while True:
         with microphone as source:
-            audio = recognizer.listen(source)
+            audio = recognizer.listen(source,phrase_time_limit=4)
         try:
             text = recognizer.recognize_google(audio, language='ru-RU')
             print(f"Recognized text: {text}")

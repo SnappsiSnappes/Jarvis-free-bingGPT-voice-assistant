@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+
 import asyncio
 import re
+from urllib3 import encode_multipart_formdata
 import vosk
 import json
 import os
@@ -41,6 +43,7 @@ from multiprocess_wake_word_recognition_no_PVC import main123
 from working_getter_from_db import working_getter_from_db
 from google_rec_no_PVC import google_rec
 from working_numbers_to_words import numbers_to_wards
+from bard_chat_multiprocess import bard_msg
 
 # play(f'{CDIR}\\sound\\ok{random.choice([1, 2, 3, 4])}.wav')
 async def play(phrase, wait_done=True):
@@ -235,6 +238,26 @@ async def vosk_listen_for_cancel():
 def split_string(s):
     return [s[i:i+1000] for i in range(0, len(s), 1000)]
 
+#!! bard
+async def bard_answer(text:str,conn):
+    text = f'{text}, {config.get("add_to_prompt","add_to_prompt")}'
+    global recorder
+    await play('internet')
+    conn.send(text)
+    canceled = False
+    while not canceled:
+
+        while True:
+            if conn.poll():
+                response = conn.recv()
+                print('\nОтвет:',response)
+                working_tts(response)
+                canceled = True
+                return True
+            else:
+                await asyncio.sleep(5)
+                #recorder.stop()
+
 async def gpt_answer(text: str,conn,bug=None):
     global dd
     global d
@@ -324,8 +347,7 @@ async def gpt_answer(text: str,conn,bug=None):
                         result = split_string(d[len_of_texts][1])
                         for i in result:
                             working_tts(i)
-                        # print(Speech_it)
-                        # working_tts(result) устарело
+
                         canceled = True
                         p1.terminate()
                     else:
@@ -335,7 +357,7 @@ async def gpt_answer(text: str,conn,bug=None):
                         
                 except:pass
             await asyncio.sleep(5)
-            #recorder.stop()
+            
             
             continue
         
@@ -385,8 +407,9 @@ async def va_respond(voice: str,conn):
     global message_log
     global first_request
     global dd
+    global choose_ai_model
     print(f"Распознано: {voice}")
-
+    voice = str(voice)
 
     if await custum_command(voice):
         #recorder.start()
@@ -413,7 +436,10 @@ async def va_respond(voice: str,conn):
             # создаем счетчик для алгоритма - корректного озвучивания
             list_of_text.append(voice)
 
-            await gpt_answer(voice,conn)
+            if choose_ai_model == 'bing':
+                await gpt_answer(voice,conn)
+            else:
+                await bard_answer(voice,conn)
 
 
             await play('reload')
@@ -458,7 +484,11 @@ async def main(conn):
     # Токен Picovoice
     global config
     config = configparser.ConfigParser()
-    config.read('config.ini')
+    config.read('config.ini',encoding='utf-8')
+
+    # bard / bing
+    global choose_ai_model
+    choose_ai_model = config.get('ai','model') # bard / bing
 
     CHROME_PATH       = r'C:\Program Files (x86)\Google\Chrome\Application'
     # VOSK
@@ -543,18 +573,37 @@ async def main(conn):
             print(f"Unexpected {err=}, {type(err)=}")
             raise
 
-def working_chat_starter(conn):
+def bing_starter(conn):
     asyncio.run(working_chat(conn))
 
 def main_starter(conn):
     asyncio.run(main(conn))
 
-if __name__ == "__main__":
-    parent_conn, child_conn = Pipe()
-    p1 = Process(target=main_starter, args=(parent_conn,))
-    p2 = Process(target=working_chat_starter, args=(child_conn,))
-    p1.start()
-    p2.start()
-    p1.join()
-    p2.join()
+def bard_starter(conn):
+    asyncio.run(bard_msg(conn))
 
+if __name__ == "__main__":
+    # чтение config.ini
+    global config
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    # bard / bing
+    global choose_ai_model
+    choose_ai_model = config.get('ai','model') # bard / bing
+    # если пользователь выбрал bing, то запускается bing_starter, иначе запускается bard_starter
+    if choose_ai_model == 'bing':
+        parent_conn, child_conn = Pipe()
+        p1 = Process(target=main_starter, args=(parent_conn,))
+        p2 = Process(target=bing_starter, args=(child_conn,))
+        p1.start()
+        p2.start()
+        p1.join()
+        p2.join()
+    else:
+        parent_conn,child_conn = Pipe()
+        p1 = Process(target=main_starter, args=(parent_conn,))
+        p2 = Process(target=bard_starter, args=(child_conn,))
+        p2.start()
+        p1.start()
+        p2.join()
+        p1.join()
