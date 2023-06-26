@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
 import re
-from numpy import unicode_
+from numpy import choose, unicode_
 import vosk
 import json
 import os
@@ -40,6 +40,7 @@ from multiprocess_bing import working_chat
 from multiprocess_wake_word_recogintion import wake_word_recognition
 from working_getter_from_db import working_getter_from_db
 from working_numbers_to_words import numbers_to_wards
+from bard_chat import bard_msg
 
 
 # play(f'{CDIR}\\sound\\ok{random.choice([1, 2, 3, 4])}.wav')
@@ -257,6 +258,15 @@ def split_string(s):
 
 
 #! bard
+async def bard_answer(text:str):
+    global recorder
+    recorder.stop()
+    await play('internet')
+    recorder.stop()
+    response = bard_msg(text)
+    print(response)
+    working_tts(response)
+
 async def gpt_answer(text: str,conn,bug=None):
     '''```
     - Основная функция запросов с BingGPT
@@ -438,8 +448,10 @@ async def va_respond(voice: str,conn):
             # создаем счетчик для алгоритма - корректного озвучивания
             list_of_text.append(voice)
 
-
-            await gpt_answer(voice,conn)
+            if choose_ai_model == 'bing':
+                await gpt_answer(voice,conn)
+            else:
+                await bard_answer(voice)
 
 
 
@@ -488,6 +500,11 @@ async def main(conn):
     config = configparser.ConfigParser()
     config.read('config.ini')
 
+    # bard / bing
+    global choose_ai_model
+    choose_ai_model = config.get('ai','model') # bard / bing
+
+    # picovoice
     PICOVOICE_TOKEN   = config.get('PICOVOICE_TOKEN','token')
     porcupine         = pvporcupine.create(
         access_key    = PICOVOICE_TOKEN,
@@ -564,16 +581,27 @@ async def main(conn):
 def working_chat_starter(conn):
     asyncio.run(working_chat(conn))
 
-def main_starter(conn):
-    asyncio.run(main(conn))
+def main_starter(conn=None):
+    asyncio.run(main(conn=None))
 
 if __name__ == "__main__":
+    global config
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    # bard / bing
+    global choose_ai_model
+    choose_ai_model = config.get('ai','model') # bard / bing
 
-    parent_conn, child_conn = Pipe()
-    p1 = Process(target=main_starter, args=(parent_conn,))
-    p2 = Process(target=working_chat_starter, args=(child_conn,))
-    p1.start()
-    p2.start()
-    p1.join()
-    p2.join()
+    if choose_ai_model == 'bing':
+        parent_conn, child_conn = Pipe()
+        p1 = Process(target=main_starter, args=(parent_conn,))
+        p2 = Process(target=working_chat_starter, args=(child_conn,))
+        p1.start()
+        p2.start()
+        p1.join()
+        p2.join()
+    else:
+        p1 = Process(target=main_starter)
+        p1.start()
+        p1.join()
 

@@ -62,15 +62,17 @@ def bard_msg(text):
 
     response= bot.ask(text)
     response = response['content']#!
+    #print('я len(respnse) = ',len(response))
     response = tranlastor(response,'en','ru')
-    response = response[0]
-
+    #print('я respnse = ',response)
+    #print('\n', 'я len(respnse) = ',len(response))
+    
     
     return response
 
 if __name__=='__main__':
-    response = bard_msg(''' привет я Лиля из Сыктывкара, у меня спина замёрзла, кашель, я люблю смотреть Саут парк, мой любимый
-     персонаж это баттерс. Потому что он напоминает внешне моего мужа.  ''')
-    print(response)
+    response = bard_msg(''' скажи создатели South park - братья? кто они вообще
+      ''')
+    print('я рабочий ',response)
     from working_tts import working_tts
     working_tts(response)
