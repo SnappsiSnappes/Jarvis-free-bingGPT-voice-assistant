@@ -80,7 +80,19 @@ python ai_launch_no_PVC.py
 </details>
 
 <details>
+
+<details>
+  <summary>Инструкции gpt3</summary>
   
+- ``приемущества :`` Очень легко, очень быстро, зачастую этого достаточно обычному пользователю
+- ``недостатки :`` Не умеет пользоваться интернетом, знания ограничены интернетом до 2021 года
+
+  1) в config.ini в графе ai, сделайте model = gpt3
+
+  
+</details>
+
+
 <summary> Авто замена cookies.json и прокси </summary>
 
 - В случае ошибки установки связи с BingGPT - произойдет автоматическая замена cookies.json на новые. За это отвечает working_edge_update_cookies.py
