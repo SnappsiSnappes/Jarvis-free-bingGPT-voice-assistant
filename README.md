@@ -79,7 +79,8 @@ python ai_launch_no_PVC.py
 7) Следуйте инструкциям Использование.
 </details>
 
-<details>
+
+
 
 <details>
   <summary>Инструкции gpt3</summary>
