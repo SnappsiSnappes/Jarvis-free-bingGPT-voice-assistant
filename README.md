@@ -94,6 +94,7 @@ python ai_launch_no_PVC.py
 </details>
 
 
+<details>
 <summary> Авто замена cookies.json и прокси </summary>
 
 - В случае ошибки установки связи с BingGPT - произойдет автоматическая замена cookies.json на новые. За это отвечает working_edge_update_cookies.py
