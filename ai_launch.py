@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from ast import arg
 import asyncio
 import re
 from numpy import choose, unicode_
@@ -41,6 +42,13 @@ from multiprocess_wake_word_recogintion import wake_word_recognition
 from working_getter_from_db import working_getter_from_db
 from working_numbers_to_words import numbers_to_wards
 from bard_chat_multiprocess import bard_msg
+
+
+from modules.gpt4free.gpt_3_ask import gpt_3_ask
+
+#! fixed
+import sys
+sys.path.insert(0, f'{os.getcwd()}\modules\gpt4free')
 
 # play(f'{CDIR}\\sound\\ok{random.choice([1, 2, 3, 4])}.wav')
 async def play(phrase, wait_done=True):
@@ -278,8 +286,7 @@ async def bard_answer(text:str,conn):
                 await asyncio.sleep(5)
                 recorder.stop()
     
-        
-    
+
 
 
 async def gpt_answer(text: str,conn,bug=None):
@@ -464,8 +471,14 @@ async def va_respond(voice: str,conn):
             # создаем счетчик для алгоритма - корректного озвучивания
             list_of_text.append(voice)
 
+            # получаем ответ от ai_model
             if choose_ai_model == 'bing':
                 await gpt_answer(voice,conn)
+
+            #elif choose_ai_model == 'gpt3':
+            #    response = gpt_3_ask(conn,voice)
+            #    working_tts(response)
+
             else:
                 await bard_answer(voice,conn)
 
@@ -603,6 +616,9 @@ def main_starter(conn):
 def bard_starter(conn):
     asyncio.run(bard_msg(conn))
 
+
+
+
 if __name__ == "__main__":
     # чтение config.ini
     global config
@@ -620,6 +636,16 @@ if __name__ == "__main__":
         p2.start()
         p1.join()
         p2.join()
+
+    elif choose_ai_model == 'gpt3':
+        parent_conn, child_conn = Pipe()
+        p1 = Process(target=main_starter, args=(parent_conn,))
+        p2 = Process(target=gpt_3_ask,args=(child_conn,))
+        p1.start()
+        p2.start()
+        p1.join()
+        p2.join()
+
     else:
         parent_conn,child_conn = Pipe()
         p1 = Process(target=main_starter, args=(parent_conn,))

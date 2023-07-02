@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 
 def split_string(stroke:str, amount_of_wards:int=1000):

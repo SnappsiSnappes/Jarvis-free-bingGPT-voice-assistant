@@ -45,6 +45,13 @@ from google_rec_no_PVC import google_rec
 from working_numbers_to_words import numbers_to_wards
 from bard_chat_multiprocess import bard_msg
 
+
+from modules.gpt4free.gpt_3_ask import gpt_3_ask
+
+#! fixed
+import sys
+sys.path.insert(0, f'{os.getcwd()}\modules\gpt4free')
+
 # play(f'{CDIR}\\sound\\ok{random.choice([1, 2, 3, 4])}.wav')
 async def play(phrase, wait_done=True):
     global recorder
@@ -111,8 +118,6 @@ async def custum_command(voice):
     else: return False
     
 
-
-
 async def execute_cmd(cmd: str, voice: str):
     #recorder.stop()
 
@@ -146,9 +151,6 @@ async def execute_cmd(cmd: str, voice: str):
         print('заморожен на 30 секунд')
         time.sleep(30)  
         #recorder.start()
-
-
-
 
 
 async def listen_for_cancel():
@@ -235,8 +237,10 @@ async def vosk_listen_for_cancel():
                 
                 return
 
+
 def split_string(s):
     return [s[i:i+1000] for i in range(0, len(s), 1000)]
+
 
 #!! bard
 async def bard_answer(text:str,conn):
@@ -257,6 +261,7 @@ async def bard_answer(text:str,conn):
             else:
                 await asyncio.sleep(5)
                 #recorder.stop()
+
 
 async def gpt_answer(text: str,conn,bug=None):
     global dd
@@ -360,7 +365,8 @@ async def gpt_answer(text: str,conn,bug=None):
             
             
             continue
-        
+
+
 async def recognize_cmd(cmd: str):
     """
     берет значения(не ключи) из yaml и 
@@ -403,6 +409,7 @@ async def filter_cmd(raw_voice: str):
 
     return cmd
 
+
 async def va_respond(voice: str,conn):
     global message_log
     global first_request
@@ -436,6 +443,7 @@ async def va_respond(voice: str,conn):
             # создаем счетчик для алгоритма - корректного озвучивания
             list_of_text.append(voice)
 
+            # получаем ответ от ai_model
             if choose_ai_model == 'bing':
                 await gpt_answer(voice,conn)
             else:
@@ -599,6 +607,16 @@ if __name__ == "__main__":
         p2.start()
         p1.join()
         p2.join()
+
+    elif choose_ai_model == 'gpt3':
+        parent_conn, child_conn = Pipe()
+        p1 = Process(target=main_starter, args=(parent_conn,))
+        p2 = Process(target=gpt_3_ask,args=(child_conn,))
+        p1.start()
+        p2.start()
+        p1.join()
+        p2.join()   
+
     else:
         parent_conn,child_conn = Pipe()
         p1 = Process(target=main_starter, args=(parent_conn,))
