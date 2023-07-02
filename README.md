@@ -15,6 +15,7 @@
 python.exe -m pip install --upgrade pip
 pip install -r requirements.txt
 pip install -r requirements2.txt
+pip install -r requirements3.txt
 ```
 Если видите ошибки то разберитесь с ними и установити зависимости. Проблемный модуль - PyAudio
 Требуется много зависимостей связанных с C++ Redist, и прочие. К сожалению пока так.
@@ -89,6 +90,7 @@ python ai_launch_no_PVC.py
 - ``недостатки :`` Не умеет пользоваться интернетом, знания ограничены интернетом до 2021 года
 
   1) в config.ini в графе ai, сделайте model = gpt3
+  2) pip install -r requirements3.txt
 
   
 </details>
