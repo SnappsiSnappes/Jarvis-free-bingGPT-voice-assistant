@@ -32,7 +32,7 @@ def working_tts(text:str):
 
     global print_counter
     print_counter = 0
-    def stop_tts(counter_current_part=1):
+    def stop_tts(counter_current_part=0):
         '''
         Для останов озвучивания достаточно нажать ESC
         '''
@@ -41,7 +41,7 @@ def working_tts(text:str):
         if print_counter == 0 :
             print_counter += 1
             print('''\n Озвучивание началось \n Для остановки нажмите ESC\n''')
-        if counter_current_part != 1: print(f'Часть {counter_current_part} из {len(text)} ...')
+        if counter_current_part != 0: print(f'Часть {counter_current_part} из {len(text)} ...')
         while sd.get_stream().active:
             if keyboard.is_pressed('esc'):
                 sd.stop()
