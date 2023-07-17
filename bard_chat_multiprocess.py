@@ -67,11 +67,11 @@ def bard_msg(conn):
     while True:
         if conn.poll():
             prompt = conn.recv()
-            prompt = text_filter(prompt)
+            #!prompt = text_filter(prompt)
             response= bot.ask(prompt)
             response = response['content']#!
             #print('я len(respnse) = ',len(response))
-            response = tranlastor(response,'en','ru')
+            #!response = tranlastor(response,'en','ru')
             #print('я respnse = ',response)
             #print('\n', 'я len(respnse) = ',len(response))
             conn.send(response)
