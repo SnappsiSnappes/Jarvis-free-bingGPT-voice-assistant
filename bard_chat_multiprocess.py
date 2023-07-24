@@ -63,9 +63,14 @@ def bard_msg(conn):
     
     bot = asyncio.run(start_bot(token=token))
     #bot = Chatbot(token)
-
+    is_bot_first_time = 0
     while True:
+        
         if conn.poll():
+            if is_bot_first_time == 0 :
+                is_bot_first_time =+ 1
+            else:
+                bot = asyncio.run(start_bot(token=token))
             prompt = conn.recv()
             #!prompt = text_filter(prompt)
             response= bot.ask(prompt)
