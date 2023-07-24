@@ -116,9 +116,9 @@ async def start_bot(token:str):
         if not bot:
             await proxy_start_bot(token)
         if not bot:
-            while True:
-                time.sleep(5)
-                print('Соединение не установлено, выключите скрипт')
+            proxy_file()
+            await proxy_start_bot(token)
+
 
         print('---- успешное соединение ----')
     
