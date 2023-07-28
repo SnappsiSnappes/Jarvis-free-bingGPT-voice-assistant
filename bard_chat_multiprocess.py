@@ -60,26 +60,31 @@ def bard_msg(conn):
         raise Exception('Токен не получен')
         
     # token = 'ваш токен , где взять? ответ: > на странице с бардом  режим разработчика в браузере > Application => __Secure-1PSID '
-    
-    bot = asyncio.run(start_bot(token=token))
+
     #bot = Chatbot(token)
-    is_bot_first_time = 0
     while True:
         
         if conn.poll():
-            if is_bot_first_time == 0 :
-                is_bot_first_time =+ 1
-            else:
-                bot = asyncio.run(start_bot(token=token))
-            prompt = conn.recv()
+             
             #!prompt = text_filter(prompt)
-            response= bot.ask(prompt)
-            response = response['content']#!
-            #print('я len(respnse) = ',len(response))
-            #!response = tranlastor(response,'en','ru')
-            #print('я respnse = ',response)
-            #print('\n', 'я len(respnse) = ',len(response))
-            conn.send(response)
+            Loop = True
+            while Loop == True:
+                try:
+                    bot = asyncio.run(start_bot(token=token))
+                    prompt = conn.recv()
+                    response= bot.ask(prompt)
+                    response = response['content']#!
+                    #print('я len(respnse) = ',len(response))
+                    #!response = tranlastor(response,'en','ru')
+                    #print('я respnse = ',response)
+                    #print('\n', 'я len(respnse) = ',len(response))
+                    conn.send(response)
+                    Loop = False
+                except Exception as e:
+                    print(e)
+                    
+                        
+                    
     
     
 
