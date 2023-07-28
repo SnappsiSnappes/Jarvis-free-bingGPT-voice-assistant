@@ -103,7 +103,7 @@ async def start_bot(token:str):
             global bot
             for proxy in proxy_list:
                 try:
-                    bot = Chatbot(token, proxy=proxy)
+                    bot = Chatbot(token, proxy=proxy, timeout=3)
                     append_stable_proxy_file('proxies_stable.txt', f'{proxy}')
                     print('\n',f'Успешное соединение через прокси {proxy}')
                     break
