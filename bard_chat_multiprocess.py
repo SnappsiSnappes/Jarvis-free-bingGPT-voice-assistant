@@ -62,23 +62,32 @@ def bard_msg(conn):
     # token = 'ваш токен , где взять? ответ: > на странице с бардом  режим разработчика в браузере > Application => __Secure-1PSID '
 
     #bot = Chatbot(token)
+    global bot
     while True:
         
         if conn.poll():
-             
+            
             #!prompt = text_filter(prompt)
             Loop = True
             while Loop == True:
                 try:
-                    bot = asyncio.run(start_bot(token=token))
+                    try:
+                        global bot,loop
+                        bot.ask(prompt=prompt)
+                        loop = False
+                    except:
+                        pass
                     prompt = conn.recv()
-                    response= bot.ask(prompt)
-                    response = response['content']#!
+                    response = asyncio.run(start_bot(token=token, prompt=prompt))
+                    
+                    # response= bot.ask(prompt)
+                    #!! response = response['content']#!
                     #print('я len(respnse) = ',len(response))
                     #!response = tranlastor(response,'en','ru')
                     #print('я respnse = ',response)
                     #print('\n', 'я len(respnse) = ',len(response))
                     conn.send(response)
+                    # prompt = None
                     Loop = False
                 except Exception as e:
                     print(e)
