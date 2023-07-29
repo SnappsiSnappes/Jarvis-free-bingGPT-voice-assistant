@@ -24,7 +24,7 @@ def proxy_file(filename:str='proxies.txt',amount:int=10):
     def main():
         proxies = asyncio.Queue()
         broker = Broker(proxies)
-        tasks = asyncio.gather(broker.grab(countries=['US', 'GB'], limit=amount),
+        tasks = asyncio.gather(broker.grab(countries=['US', 'GB','FR', 'NL','PL','UA'], limit=amount), #countries=['US', 'GB',''],
                             save(proxies, filename=filename))
         loop = asyncio.get_event_loop()
         loop.run_until_complete(tasks)
