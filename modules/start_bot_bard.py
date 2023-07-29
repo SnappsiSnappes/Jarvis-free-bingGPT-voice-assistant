@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-async def start_bot(token:str):
+async def start_bot(token:str,prompt:str):
     '''
     ### Эта функция стартует бард бота, используя прокси.
     - ``требуется параметр token`` -  токен можно взять в браузере на странице барда => google_dev_tools => Application => __Secure-1PSID
@@ -34,7 +34,7 @@ async def start_bot(token:str):
 
 
 
-
+    global bot
     async def main(token):
 
         
@@ -87,8 +87,9 @@ async def start_bot(token:str):
             
             for proxy in stable_proxy_list:
                 try:
-                    bot = Chatbot(token, proxy=proxy)
+                    bot = Chatbot(token, proxy=proxy, timeout=9999)
                     print('\n',f'Успешное соединение через прокси {proxy}')
+                    
                     break
                 except Exception as e:
                     print(f"Ошибка при использовании прокси {proxy}: {e}")
@@ -103,7 +104,7 @@ async def start_bot(token:str):
             global bot
             for proxy in proxy_list:
                 try:
-                    bot = Chatbot(token, proxy=proxy, timeout=3)
+                    bot = Chatbot(token, proxy=proxy, timeout=9999)
                     append_stable_proxy_file('proxies_stable.txt', f'{proxy}')
                     print('\n',f'Успешное соединение через прокси {proxy}')
                     break
@@ -112,18 +113,22 @@ async def start_bot(token:str):
                     print(f"Ошибка при использовании прокси {proxy}: {e}")
         
         proxy_start_bot_stable_proxy(token)
+        while not bot:
 
-        if not bot:
-            await proxy_start_bot(token)
-        if not bot:
+            asyncio.run ( proxy_start_bot(token) )
             proxy_file()
-            await proxy_start_bot(token)
+
 
 
         print('---- успешное соединение ----')
     
-    asyncio.run(main(token))
-    return bot
+    await main(token)
+
+    while bot == None:
+        await main(token)
+    response = bot.ask(message=prompt)
+    response = response['content']
+    return response
 
     #asyncio.create_task(main(token=token))
 
@@ -147,4 +152,7 @@ if __name__ == '__main__':
                 token = ваш токен
                 токен это google_dev_tools => Application => __Secure-1PSID
                 ''')
-    asyncio.run(start_bot(token))
+    
+    prompt = 'привет расскажи какая погода в сыктывкаре'
+    resp = asyncio.run(start_bot(token, prompt=prompt))
+    print(resp)
