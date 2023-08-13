@@ -57,7 +57,7 @@ python ai_launch_no_PVC.py
   <summary>Инструкции Bard</summary>
   
 - ``приемущества :`` легко, быстро
-- ``недостатки :`` из за перевода происходит неграмотный ответ , используется двойной перевод. 
+- ``недостатки :`` нет.
 
   1) Зайдите на сайт , используя впн , получите доступ к барду , используя свой гугл аккаунт - https://bard.google.com/?hl=en ![image](https://github.com/SnappsiSnappes/Jarvis-free-bingGPT-voice-assistant/assets/111605401/1a908389-6356-4c2b-a674-3576a74a34d6)
   2) вставьте токен в config.ini - [bard_token] token = ![image](https://github.com/SnappsiSnappes/Jarvis-free-bingGPT-voice-assistant/assets/111605401/a3c6d1c5-3c68-4f07-92ce-cf5b08c90713)

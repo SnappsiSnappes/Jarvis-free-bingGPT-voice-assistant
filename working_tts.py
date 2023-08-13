@@ -32,7 +32,7 @@ def working_tts(text:str):
 
     global print_counter
     print_counter = 0
-    def stop_tts():
+    def stop_tts(counter_current_part=0):
         '''
         Для останов озвучивания достаточно нажать ESC
         '''
@@ -41,6 +41,7 @@ def working_tts(text:str):
         if print_counter == 0 :
             print_counter += 1
             print('''\n Озвучивание началось \n Для остановки нажмите ESC\n''')
+        if counter_current_part != 0: print(f'Часть {counter_current_part} из {len(text)} ...')
         while sd.get_stream().active:
             if keyboard.is_pressed('esc'):
                 sd.stop()
@@ -76,6 +77,7 @@ def working_tts(text:str):
     # 1000 = лимит
     if len(text) >1000:
         text = split_string(text,1000)
+        counter_current_part = 1
         for i in text:
             if stop_signal == False:
             
@@ -86,7 +88,10 @@ def working_tts(text:str):
                                 put_yo=put_yo)
                 sd.play(audio, sample_rate)
                 #!
-                stop_tts()
+                
+
+                stop_tts(counter_current_part)
+                counter_current_part += 1
                 #!time.sleep(len(audio) / sample_rate)
                 sd.stop
     else:
@@ -106,4 +111,8 @@ def working_tts(text:str):
 
 
 if __name__ == '__main__':
-    working_tts(""" Ваш текст """)
+    working_tts(
+        '''
+        прив
+        '''
+    )

@@ -2,9 +2,19 @@
 
 
 
-async def google_rec(target:str):
-    
-    import asyncio
+async def google_rec(target:str or list):
+    '''
+
+    ```
+    Функция слушает микрофон
+    принимает в параметры строку или список слов на которые надо реагировать
+    при звучании заданых слов - `возвращает True`
+    ```
+    `` ВАЖНО! строка должна быть с маленьких букв    
+    '''
+
+
+    #import asyncio
     import speech_recognition as sr
     recognizer = sr.Recognizer()
     microphone = sr.Microphone()
@@ -18,8 +28,9 @@ async def google_rec(target:str):
             audio = recognizer.listen(source,phrase_time_limit=4)
         try:
             text = recognizer.recognize_google(audio, language='ru-RU')
-            print(f"Recognized text: {text}")
-            if target in text.lower():
+            #print(f"Услышано: {text}")
+            if   text.lower() in target:
+                #print('success')
                 # global canceled
                 # canceled = True
                 # print("Cancel keyword detected. Cancelling all tasks.")
@@ -31,7 +42,7 @@ async def google_rec(target:str):
             print(f"Request error: {e}")
 
 if __name__ == "__main__":
-    target = 'отмена'
+    target = ['отмена', 'джарвис']
     import asyncio
     from rich import print
     import speech_recognition as sr

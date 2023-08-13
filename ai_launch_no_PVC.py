@@ -552,7 +552,7 @@ async def main(conn):
             # wake_worder = False
             if wake_worder == True:
                 pass
-            else:wake_worder = await google_rec('джарвис')#! experemental
+            else:wake_worder = await google_rec(['джарвис','жарвис','джирвис','жирвис', 'жир вес','Jeans'])#! experemental
             
             if wake_worder == True:
                 #recorder.stop()
