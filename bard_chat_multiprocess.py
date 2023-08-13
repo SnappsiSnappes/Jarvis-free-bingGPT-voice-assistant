@@ -48,16 +48,10 @@ def bard_msg(conn):
     try:
         config = configparser.ConfigParser()
         config.read('config.ini')
-        token = str(config.get('bard_token','token'))
+        token_a = str(config.get('bard_token','token1'))
+        token_b = str(config.get('bard_token','token2'))
     except:
-        print('''
-        ! Ошибка получения токена !
-            создайте config.int в директории с скриптом и добавьте в него две строчки 
-            [bard_token]
-            token = ваш токен
-            токен это google_dev_tools => Application => __Secure-1PSID
-            ''')
-        raise Exception('Токен не получен')
+        pass
         
     # token = 'ваш токен , где взять? ответ: > на странице с бардом  режим разработчика в браузере > Application => __Secure-1PSID '
 
@@ -78,7 +72,7 @@ def bard_msg(conn):
                     except:
                         pass
                     prompt = conn.recv()
-                    response = asyncio.run(start_bot(token=token, prompt=prompt))
+                    response = asyncio.run(start_bot(token1=token_a, token2=token_b, prompt=prompt))
                     
                     # response= bot.ask(prompt)
                     #!! response = response['content']#!

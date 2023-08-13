@@ -45,7 +45,8 @@ def bard_msg(text):
     try:
         config = configparser.ConfigParser()
         config.read('config.ini')
-        token = str(config.get('bard_token','token'))
+        token_a = str(config.get('bard_token','token1'))
+        token_b = str(config.get('bard_token','token2'))
     except:
         print('''
         ! Ошибка получения токена !
@@ -58,7 +59,7 @@ def bard_msg(text):
     
     # token = 'ваш токен , где взять? ответ: > на странице с бардом  режим разработчика в браузере > Application => __Secure-1PSID '
     
-    bot = asyncio.run(start_bot(token=token))
+    bot = asyncio.run(start_bot(token1=token_a,token2=token_b,prompt=text))
     #bot = Chatbot(token)
 
     response= bot.ask(text)
@@ -72,7 +73,7 @@ def bard_msg(text):
     return response
 
 if __name__=='__main__':
-    response = bard_msg(''' меня пригласили на вакансию специалист со знанием PHP . я не знаю PHP я знаю только Python
+    response = bard_msg(''' что такое газлайтинг
 
     
       ''')
