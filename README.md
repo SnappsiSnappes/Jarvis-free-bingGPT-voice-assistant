@@ -60,7 +60,8 @@ python ai_launch_no_PVC.py
 - ``недостатки :`` нет.
 
   1) Зайдите на сайт , используя впн , получите доступ к барду , используя свой гугл аккаунт - https://bard.google.com/?hl=en ![image](https://github.com/SnappsiSnappes/Jarvis-free-bingGPT-voice-assistant/assets/111605401/1a908389-6356-4c2b-a674-3576a74a34d6)
-  2) вставьте токен в config.ini - [bard_token] token = ![image](https://github.com/SnappsiSnappes/Jarvis-free-bingGPT-voice-assistant/assets/111605401/a3c6d1c5-3c68-4f07-92ce-cf5b08c90713)
+  2) вставьте токен в config.ini - [bard_token] token1 = ![image](https://github.com/SnappsiSnappes/Jarvis-free-bingGPT-voice-assistant/assets/111605401/a3c6d1c5-3c68-4f07-92ce-cf5b08c90713)
+  3) UPDATE теперь нужно 2 токена , вот второй = __Secure-1PSIDTS 
 
   
 </details>
