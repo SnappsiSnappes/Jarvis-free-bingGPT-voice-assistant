@@ -32,8 +32,8 @@ configparser==5.3.0
 click==8.1.3
 sqlparse==0.3.0
 proxybroker2==2.0.0a4
-bardapi==0.1.11
-GoogleBard==1.4.0
+bardapi
+GoogleBard
 multidict==6.0.4
 selenium-stealth==1.0.6
 msedge-selenium-tools==3.141.4

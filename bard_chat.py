@@ -32,12 +32,12 @@ def bard_msg(text):
     text = split_string(text,500)
     # 2) пытаемся понять что за язык в параметре text    
     # если русский текст то переводим в англ
-    for i in text:
-        if langid.classify(i) == 'ru' or 'bg':
-            text = tranlastor(i,from_lang='ru',to_lang='en')
-        # если англ то pass
-        elif langid.classify(i)[0] == 'en':
-            print('англ текст')
+    #!for i in text:
+    #!    if langid.classify(i) == 'ru' or 'bg':
+    #!        text = tranlastor(i,from_lang='ru',to_lang='en')
+    #!    # если англ то pass
+    #!    elif langid.classify(i)[0] == 'en':
+    #!        print('англ текст')
 
     text = str(text)
     
@@ -45,7 +45,8 @@ def bard_msg(text):
     try:
         config = configparser.ConfigParser()
         config.read('config.ini')
-        token = str(config.get('bard_token','token'))
+        token_a = str(config.get('bard_token','token1'))
+        token_b = str(config.get('bard_token','token2'))
     except:
         print('''
         ! Ошибка получения токена !
@@ -54,16 +55,17 @@ def bard_msg(text):
             token = ваш токен
             токен это google_dev_tools => Application => __Secure-1PSID
             ''')
-        
+        raise Exception('Токен не получен')
+    
     # token = 'ваш токен , где взять? ответ: > на странице с бардом  режим разработчика в браузере > Application => __Secure-1PSID '
     
-    bot = asyncio.run(start_bot(token=token))
+    bot = asyncio.run(start_bot(token1=token_a,token2=token_b,prompt=text))
     #bot = Chatbot(token)
 
     response= bot.ask(text)
     response = response['content']#!
     #print('я len(respnse) = ',len(response))
-    response = tranlastor(response,'en','ru')
+    #response = tranlastor(response,'en','ru')
     #print('я respnse = ',response)
     #print('\n', 'я len(respnse) = ',len(response))
     
@@ -71,8 +73,10 @@ def bard_msg(text):
     return response
 
 if __name__=='__main__':
-    response = bard_msg(''' скажи создатели South park - братья? кто они вообще
+    response = bard_msg(''' что такое газлайтинг
+
+    
       ''')
-    print('я рабочий ',response)
+    print('Response: ',response)
     from working_tts import working_tts
     working_tts(response)

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-async def start_bot(token:str):
+async def start_bot(token1:str,token2:str,prompt:str):
     '''
     ### Эта функция стартует бард бота, используя прокси.
     - ``требуется параметр token`` -  токен можно взять в браузере на странице барда => google_dev_tools => Application => __Secure-1PSID
@@ -34,8 +34,8 @@ async def start_bot(token:str):
 
 
 
-
-    async def main(token):
+    global bot
+    async def main(token1,token2):
 
         
         def append_stable_proxy_file(filename:str,proxy:str):
@@ -77,7 +77,7 @@ async def start_bot(token:str):
         global bot
         bot=''
 
-        def proxy_start_bot_stable_proxy(token):
+        def proxy_start_bot_stable_proxy(token1,token2):
             """
             Пытается подключиться к боту используя стабильные прокси
             стабильные прокси создаются если был успешный ответ от бота
@@ -87,8 +87,9 @@ async def start_bot(token:str):
             
             for proxy in stable_proxy_list:
                 try:
-                    bot = Chatbot(token, proxy=proxy)
+                    bot = Chatbot(secure_1psid=token1, secure_1psidts=token2, proxy=proxy, timeout=9999)
                     print('\n',f'Успешное соединение через прокси {proxy}')
+                    
                     break
                 except Exception as e:
                     print(f"Ошибка при использовании прокси {proxy}: {e}")
@@ -96,14 +97,14 @@ async def start_bot(token:str):
                     remove_stable_proxy_file('proxies_stable.txt', proxy_without_http) # удаляем нестабильный прокси
 
 
-        async def proxy_start_bot(token):
+        async def proxy_start_bot(token1,token2):
             """
             Пытается подключиться к боту используя прокси
             """
             global bot
             for proxy in proxy_list:
                 try:
-                    bot = Chatbot(token, proxy=proxy)
+                    bot = Chatbot(secure_1psid=token1, secure_1psidts=token2, proxy=proxy, timeout=9999)
                     append_stable_proxy_file('proxies_stable.txt', f'{proxy}')
                     print('\n',f'Успешное соединение через прокси {proxy}')
                     break
@@ -111,19 +112,23 @@ async def start_bot(token:str):
                 except Exception as e:
                     print(f"Ошибка при использовании прокси {proxy}: {e}")
         
-        proxy_start_bot_stable_proxy(token)
+        proxy_start_bot_stable_proxy(token1,token2)
+        while not bot:
 
-        if not bot:
-            await proxy_start_bot(token)
-        if not bot:
-            while True:
-                time.sleep(5)
-                print('Соединение не установлено, выключите скрипт')
+            asyncio.run ( proxy_start_bot(token1,token2) )
+            proxy_file()
+
+
 
         print('---- успешное соединение ----')
     
-    asyncio.run(main(token))
-    return bot
+    await main(token1=token1,token2=token2)
+
+    while bot == None:
+        await main(token1=token1,token2=token2)
+    response = bot.ask(message=prompt)
+    response = response['content']
+    return response
 
     #asyncio.create_task(main(token=token))
 
@@ -147,4 +152,7 @@ if __name__ == '__main__':
                 token = ваш токен
                 токен это google_dev_tools => Application => __Secure-1PSID
                 ''')
-    asyncio.run(start_bot(token))
+    
+    prompt = 'привет расскажи какая погода в сыктывкаре'
+    resp = asyncio.run(start_bot(token, prompt=prompt))
+    print(resp)
