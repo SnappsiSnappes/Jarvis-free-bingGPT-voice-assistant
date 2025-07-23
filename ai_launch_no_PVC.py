@@ -1,63 +1,89 @@
 # -*- coding: utf-8 -*-
-
-import asyncio
-import re
-from urllib3 import encode_multipart_formdata
-import vosk
+import array
 import json
 import os
 import queue
 import random
-import struct
-import subprocess
 import time
 from ctypes import POINTER, cast
-import re
-import pvporcupine
 import simpleaudio as sa
 import vosk
 import yaml
 from comtypes import CLSCTX_ALL
-from fuzzywuzzy import fuzz
+from rapidfuzz import fuzz
 from pvrecorder import PvRecorder
 from pycaw.pycaw import (
     AudioUtilities,
     IAudioEndpointVolume
 )
 from rich import print
-from working_tts import working_tts
-from pydub import playback
+
+from display import init_driver, get_driver
+from emotion.drivers import EmotionDisplayDriver
+from emotion.manager import EmotionManager
+from events.broker import EventBroker
+from jarvis_skills import load_all, handle_utterance, start_skill_reloader
 import speech_recognition as sr
-from EdgeGPT import Chatbot #ConversationStyle
 import datetime
-from num2words import num2words
 import configparser
 import click
-import sqlite3
 from multiprocessing import Process, Pipe
 import threading
 
-#! внизу мои модули
-from multiprocess_bing import working_chat
-from multiprocess_wake_word_recognition_no_PVC import main123
+# ! внизу мои модули
 from working_getter_from_db import working_getter_from_db
-from google_rec_no_PVC import google_rec
-from working_numbers_to_words import numbers_to_wards
-from bard_chat_multiprocess import bard_msg
+
+##################################################################
+import signal, sys, asyncio, multiprocessing as mp
+
+# Список фоновых процессов Jarvis
+child_processes: list[mp.Process] = []
+
+_SND_CACHE: dict[str, sa.WaveObject] = {}
 
 
-from modules.gpt4free.gpt_3_ask import gpt_3_ask
+def start_process(target, *args) -> mp.Process:
+    """
+    Вспомогательная обёртка, чтобы все дочерние процессы
+    автоматически попадали в child_processes.
+    """
+    p = mp.Process(target=target, args=args, daemon=True)
+    p.start()
+    child_processes.append(p)
+    return p
 
-#! fixed
-import sys
-sys.path.insert(0, f'{os.getcwd()}\modules\gpt4free')
+
+def _shutdown(signum, frame):
+    print("\n[Jarvis] Получен сигнал завершения, выключаюсь...")
+    # Корректно гасим дочерние процессы
+    for p in child_processes:
+        if p.is_alive():
+            p.terminate()  # или p.join(timeout=3)
+    # Завершаем asyncio-цикл (если он ещё крутится)
+    try:
+        loop = asyncio.get_running_loop()
+        loop.stop()
+    except RuntimeError:
+        pass
+    sys.exit(0)
+
+
+# Регистрируем SIGINT (Ctrl+C) и SIGTERM
+signal.signal(signal.SIGINT, _shutdown)
+signal.signal(signal.SIGTERM, _shutdown)
+
+
+##################################################################
+
 
 # play(f'{CDIR}\\sound\\ok{random.choice([1, 2, 3, 4])}.wav')
 async def play(phrase, wait_done=True):
     global recorder
-    #recorder.stop()
-    try:recorder.stop()
-    except: pass
+    # recorder.stop()
+    # try:
+    #     recorder.stop()
+    # except:
+    #     pass
     filename = f"{CDIR}\\sound\\"
 
     if phrase == "greet":  # for py 3.8
@@ -79,7 +105,7 @@ async def play(phrase, wait_done=True):
             # Ваш код для вечерней/ночной проверки здесь
             filename += f"run{random.choice([1, 2, 5])}.wav"
 
-        #?filename += f"run{random.choice([1, 2, 3])}.wav"
+        # ?filename += f"run{random.choice([1, 2, 3])}.wav"
     elif phrase == "stupid":
         filename += 'stupid.wav'
     elif phrase == "reload":
@@ -93,21 +119,18 @@ async def play(phrase, wait_done=True):
     elif phrase == 'reload':
         filename += f'reload{random.choice([1, 2, 3])}.wav'
 
-
-    wave_obj = sa.WaveObject.from_wave_file(filename)
+    wave_obj = _SND_CACHE.get(filename)
+    if wave_obj is None:
+        wave_obj = sa.WaveObject.from_wave_file(filename)
+    _SND_CACHE[filename] = wave_obj
     play_obj = wave_obj.play()
 
     if wait_done:
         play_obj.wait_done()
 
-        # time.sleep((len(wave_obj.audio_data) / wave_obj.sample_rate) + 0.5)
-        # print("END")
-        # time.sleep(0.5)
-        #recorder.start()
-
 
 async def custum_command(voice):
-    if 'скажи' in voice:return False
+    if 'скажи' in voice: return False
 
     data = f"{working_getter_from_db(text=voice)}"
     if data != 'None':
@@ -115,13 +138,11 @@ async def custum_command(voice):
         click.launch(data)
 
         return True
-    else: return False
-    
+    else:
+        return False
+
 
 async def execute_cmd(cmd: str, voice: str):
-    #recorder.stop()
-
-
     if cmd == 'sound_off':
         await play("ok", True)
 
@@ -147,239 +168,24 @@ async def execute_cmd(cmd: str, voice: str):
     elif cmd == 'offf':
         global ltc
         await play("off", True)
-        #recorder.stop()
+        # recorder.stop()
         print('заморожен на 30 секунд')
-        time.sleep(30)  
-        #recorder.start()
-
-
-async def listen_for_cancel():
-    global canceled
-
-    #recorder.stop()
-    recognizer = sr.Recognizer()
-    microphone = sr.Microphone()
-    
-    with microphone as source:
-        recognizer.adjust_for_ambient_noise(source)
-    
-    print('Скажите "отмена" для отмены поиска...')
-    
-    while not canceled:
-        #recorder.stop()
-        with microphone as source:
-            audio = recognizer.listen(source)
-            await asyncio.sleep(4)
-        try:
-            text = recognizer.recognize_google(audio, language='ru-RU')
-            #print(f"Recognized text: {text}")
-            if "отмена" in text.lower():
-                
-                canceled = True
-                print("Поиск отменен.")
-                await play('internet_off')
-                return
-        except sr.UnknownValueError:
-            pass
-        except sr.RequestError as e:
-            print(f"Request error: {e}")
-
-
-async def vosk_listen_for_cancel():
-    global canceled
-    #recorder.stop()
-    import vosk
-    import pyaudio
-    import json
-
-    MICROPHONE_INDEX  = -1 # Индекс микрофона, -1 чтобы выбрать по умолчанию
-    BUFFER_SIZE       = 2048 # Количество байт в буфере записи
-    SAMPLE_RATE       = 16000 # Частота дискретизации
-
-    # Загружаем модель и создаем распознаватель
-    model = vosk.Model("model_small")
-    rec   = vosk.KaldiRecognizer(model, SAMPLE_RATE)
-
-    # Создаем объект pyaudio для записи аудио
-    p = pyaudio.PyAudio()
-
-    # Открываем поток для чтения аудио из микрофона
-    stream = p.open(format=pyaudio.paInt16, channels=1, rate=SAMPLE_RATE, input=True,
-                    frames_per_buffer=BUFFER_SIZE, input_device_index=MICROPHONE_INDEX)
-
-    # Цикл записи и распознавания аудио
-    while canceled == False:
-        
-        # Считываем аудиоданные из потока
-        data = stream.read(BUFFER_SIZE)
-        if len(data) == 0:
-            break
-
-        # Передаем данные в распознаватель
-        if rec.AcceptWaveform(data):
-            result = json.loads(rec.Result())["text"]
-            print(result)
-            print('можно сказать ОТМЕНА')
-            await asyncio.sleep(4)
-
-            if 'отмен' in result:
-                canceled = True
-                print("Cancel keyword detected. Cancelling all tasks.")
-                bot = Chatbot(cookie_path='cookies.json')
-                await bot.close()
-                await play('off_internet')
-                
-
-                # Останавливаем поток и освобождаем ресурсы
-                stream.stop_stream()
-                stream.close()
-                p.terminate()
-                
-                return
-
-
-def split_string(s):
-    return [s[i:i+1000] for i in range(0, len(s), 1000)]
-
-
-#!! bard
-async def bard_answer(text:str,conn):
-    text = f'{text}, {config.get("add_to_prompt","add_to_prompt")}'
-    global recorder
-    await play('internet')
-    conn.send(text)
-    canceled = False
-    while not canceled:
-
-        while True:
-            if conn.poll():
-                response = conn.recv()
-                print('\nОтвет:',response)
-                working_tts(response)
-                canceled = True
-                return True
-            else:
-                await asyncio.sleep(5)
-                #recorder.stop()
-
-
-async def gpt_answer(text: str,conn,bug=None):
-    global dd
-    global d
-    try:
-        global recorder, ltc
-        recorder.stop()
-    except:pass
-    global canceled
-    
-    global list_of_text
-    text = f'{text}, {config.get("add_to_prompt","add_to_prompt")}'
-    if not bug: await play('internet')
-
-
-    parent_conn, child_conn = Pipe()
-    p1 = Process(target=main123, args=(child_conn,'отмена'))
-    p1.start()
-    
-
-    def check_for_cancel():
-        #recorder.stop()
-        global canceled
-        if parent_conn.poll():
-            canceled = parent_conn.recv()
-            return True
-        return canceled
-
-    while not canceled:
-
-        print('Jarvis зашел в интернет')        
-
-        # Select only the bot response from the response dictionary
-        #отправляем запрос в working 
-        canceled = check_for_cancel()
-        if canceled == True:break
-        conn.send(text)
-        while True:
-            canceled = check_for_cancel()
-            if canceled == True:break
-                
-            if conn.poll():
-                canceled = check_for_cancel()
-                if canceled == True:break
-                response = conn.recv()
-                response = f'{response[0]}'
-                print('response- ',response)
-                #?
-                # for message in response["item"]["messages"]: 
-                #     if message["author"] == "bot":
-                #         bot_response = message["text"]
-                #?
-                # Remove [^#^] citations in response
-                bot_response = response
-                bot_response = re.sub('\[\^\d+\^\]', '', bot_response)
-                bot_response = bot_response.replace('привет, это Bing',' вот что я нашел в интернете ')
-                bot_response = bot_response.replace('Здравствуйте, это Bing','вот что я нашел ')
-                bot_response = bot_response.replace('Здравствуйте',' ')
-                bot_response = bot_response.replace('Привет',' ')
-                bot_response = bot_response.replace('Привет,',' ')
-                bot_response = bot_response.replace('это Bing',' ')
-                
-                pogoda = ['погода','градус', "погоду","градусов","градус","погод"]
-                for word in pogoda:
-                    if word in text:
-                        bot_response = bot_response.replace('+','плюс ')
-                        bot_response = bot_response.replace('-','минус ')
-                        bot_response = bot_response.replace('°',' ')
-                #!!
-                if len(bot_response) < 10:
-                    await gpt_answer(text=text,conn=conn,bug=True)
-                    p1.terminate()
-                    return
-                #!!
-
-
-                len_of_texts=len(list_of_text)
-
-                
-                dd = dd+1
-                d.update({dd: [text,bot_response]})
-
-                canceled = check_for_cancel()
-                if canceled == True:break
-                try:
-                    Speech_it = d[len_of_texts][1]
-                    if Speech_it:
-                        result = split_string(d[len_of_texts][1])
-                        for i in result:
-                            working_tts(i)
-
-                        canceled = True
-                        p1.terminate()
-                    else:
-                        print('что то пошло не так...')
-                        canceled = True
-                        p1.terminate()
-                        
-                except:pass
-            await asyncio.sleep(5)
-            
-            
-            continue
+        time.sleep(30)
 
 
 async def recognize_cmd(cmd: str):
     """
-    берет значения(не ключи) из yaml и 
+    берет значения(не ключи) из yaml и
     фильтрует через fuzz.raio.
     фильтрует их на совпадение с запросом,
-    если хоть что то совпадает больше чем на 0% 
-    то ключи этого значения 
+    если хоть что то совпадает больше чем на 0%
+    то ключи этого значения
     вставляет в кастомный
-    словарь, с командой с 
+    словарь, с командой с
     наимбольшим процентом и с значением
     процента совпадения
-    например на запрос - 
-    "открыть браузер" будет: 
+    например на запрос -
+    "открыть браузер" будет:
     {'cmd': 'open_browser', 'percent': 100}
     """
     rc = {'cmd': '', 'percent': 0}
@@ -410,49 +216,37 @@ async def filter_cmd(raw_voice: str):
     return cmd
 
 
-async def va_respond(voice: str,conn):
-    global message_log
+async def va_respond(voice: str, conn):
     global first_request
     global dd
-    global choose_ai_model
     print(f"Распознано: {voice}")
+    if handle_utterance(voice):
+        return True  # скилл ответил, выходим
     voice = str(voice)
 
     if await custum_command(voice):
-        #recorder.start()
         return True
-    
+
     cmd = await recognize_cmd(await filter_cmd(voice))
 
     print(cmd)
-    #если тишина
+    # если тишина
     if len(cmd['cmd'].strip()) <= 0:
-        #recorder.start()
+        # recorder.start()
         return False
     elif cmd['percent'] < 70 or cmd['cmd'] not in VA_CMD_LIST.keys():
         if fuzz.ratio(voice.join(voice.split()[:1]).strip(), "скажи") > 75:
 
             if first_request:
-                message_log.append({"role": "user", "content": voice})
                 first_request = False
 
             global canceled
-            global list_of_text
             # Создаем и запускаем поток для функции gpt_answer
             canceled = False
-            # создаем счетчик для алгоритма - корректного озвучивания
-            list_of_text.append(voice)
-
-            # получаем ответ от ai_model
-            if choose_ai_model == 'bing':
-                await gpt_answer(voice,conn)
-            else:
-                await bard_answer(voice,conn)
-
 
             await play('reload')
             return False
-        
+
         else:
             await play("not_found")
 
@@ -464,164 +258,187 @@ async def va_respond(voice: str,conn):
         else:
 
             return True
-    
+
 
 async def main(conn):
-    
+    print(f"[LOG] Зашли в main")
     global ltc
-    
     global canceled
     global list_of_text
-    global CDIR,VA_ALIAS,VA_CMD, recognizer,VA_NAME
-    global VA_VER,VA_TBR , VA_CMD_LIST,icrophone_index, model, samplerate, device, kaldi_rec, q, CHROME_PATH, message_log, first_request, dd
+    global CDIR, VA_ALIAS, VA_CMD, recognizer, VA_NAME
+    global VA_VER, VA_TBR, VA_CMD_LIST, icrophone_index, model, samplerate, device, kaldi_rec, q, first_request, dd
     global hour, porcupine
-    CDIR              = os.getcwd()
-    VA_CMD_LIST       = yaml.safe_load(
-        open('commands.yaml', 'rt', encoding='utf8'),)
+    CDIR = os.getcwd()
+    VA_CMD_LIST = yaml.safe_load(
+        open('commands.yaml', 'rt', encoding='utf8'), )
 
+    init_driver("websocket")
+    load_all()
+
+    broker = EventBroker()
+    # создаём драйвер эмоций — он подпишется на события
+    emo_display = EmotionDisplayDriver(broker)
+    # создаём менеджер, запускам фоновые задачи
+    emo_manager = EmotionManager(broker, 30)
+    emo_manager.start()
+
+    async def _tk_update_loop():
+        drv = get_driver()
+        while True:
+            try:
+                drv.process_events()
+            except Exception:
+                pass
+            await asyncio.sleep(0.05)
+
+    asyncio.create_task(_tk_update_loop())
+
+    start_skill_reloader()
+    print(f"[LOG] Прошли загрузку скилов")
     # Create a recognizer object and wake word variables
-    recognizer        = sr.Recognizer()
+    recognizer = sr.Recognizer()
 
     # Конфигурация
-    VA_NAME           = 'Jarvis'
-    VA_VER            = "3.0"
-    VA_ALIAS          = ('джарвис',)
-    VA_TBR            = ('скажи', 'покажи', 'ответь', 'произнеси', 'расскажи', 'сколько', 'слушай')
+    VA_NAME = 'Jarvis'
+    VA_VER = "3.0"
+    VA_ALIAS = ('джарвис',)
+    VA_TBR = ('скажи', 'покажи', 'ответь', 'произнеси', 'расскажи', 'сколько', 'слушай')
 
     # PORCUPINE
     # Токен Picovoice
     global config
     config = configparser.ConfigParser()
-    config.read('config.ini',encoding='utf-8')
-
-    # bard / bing
-    global choose_ai_model
-    choose_ai_model = config.get('ai','model') # bard / bing
-
-    CHROME_PATH       = r'C:\Program Files (x86)\Google\Chrome\Application'
+    config.read('config.ini', encoding='utf-8')
+    print(f"[LOG] Прочитали конфиг")
     # VOSK
-    MICROPHONE_INDEX  = int(config.get('MIC','microphone_index'))
-    model             = vosk.Model("model_small")
-    samplerate        = 16000
-    device            = MICROPHONE_INDEX
-    kaldi_rec         = vosk.KaldiRecognizer(model, samplerate)
-    q                 = queue.Queue()
-    recorder          = PvRecorder(device_index=MICROPHONE_INDEX, frame_length=512)
-    # ChatGPT vars
-    message_log = [
-        {"role": "system", "content": "Ты голосовой ассистент из железного человека."}
-    ]
+    MICROPHONE_INDEX = int(config.get('MIC', 'microphone_index'))
+    print(f"[LOG] MICROPHONE_INDEX")
+    model = vosk.Model("models/model_small")
+    print(f"[LOG] Инициализировали модель")
+    samplerate = 16000
+    print(f"[LOG] samplerate = {samplerate}")
+    kaldi_rec = vosk.KaldiRecognizer(model, samplerate)
+    print(f"[LOG] Инициализировали sst")
+    q = queue.Queue()
+    recorder = PvRecorder(device_index=MICROPHONE_INDEX, frame_length=512)
+    print(f"[LOG] Инициализировали микрофон")
 
-    #body
+    # body
     now = datetime.datetime.now()
     hour = now.hour
 
     global canceled
     canceled = False
-    global list_of_text
-    list_of_text = []
     global d
     global dd
     d = {}
     dd = 0
 
-    #! #recorder.start()
     time.sleep(0.5)
     ltc = time.time() - 1000
     first_request = True
-    print('Произнесите команду Джарвис')
+    print('Произнесите команду Джарвис', flush=True)
     await play('run')
-    
+    recorder.start()
+
     counter = 0
+
     def set_to_false():
-        global wake_worder,counter
+        nonlocal wake_worder, counter
         while True:
             wake_worder = False
             time.sleep(30)
             counter = 0
-    t = threading.Thread(target=set_to_false)
-    t.start()        
+
+    t = threading.Thread(target=set_to_false, daemon=True)
+    t.start()
     wake_worder = False
+    listening = False
 
     while True:
         try:
-            try:recorder.stop()
-            except:pass
-            # pcm = #recorder.read()
-            # keyword_index = porcupine.process(pcm)
-            # wake_worder = False
-            if wake_worder == True:
-                pass
-            else:wake_worder = await google_rec(['джарвис','жарвис','джирвис','жирвис', 'жир вес','Jeans'])#! experemental
-            
-            if wake_worder == True:
-                #recorder.stop()
-                if counter == 0:
-                    await play('greet',True)
-                    print("Здравствуйте.")
-                    counter = 1
-                #recorder.start()  # prevent self recording
+            pcm = recorder.read()
+            pcm_bytes = array.array('h', pcm).tobytes()
+
+            # ── 1) если мы УЖЕ слушаем команду ───────────────────────
+            if listening:
+                if kaldi_rec.AcceptWaveform(pcm_bytes):
+                    cmd = json.loads(kaldi_rec.Result()).get('text', '')
+                    if cmd:
+                        print("[CMD] :", cmd)
+                        # Мьютим микрофон, чтобы не услышать свой же голос
+                        recorder.stop()
+                        # здесь вызываем skills / TTS:
+                        broker.publish("user_query_started")
+                        await va_respond(cmd, conn)
+                        broker.publish("user_query_ended")
+                        # Убираем мьют и рестартуем запись
+                        recorder.start()
+                        # возвращаемся к режиму «ждём Джарвиса»
+                        # listening = False
+                        # wake_worder = False
+                        kaldi_rec.Reset()
+                        # await play('run', False)  # «Произнесите…»
+
+                continue  # пропускаем дальнейшую часть цикла
+
+            # ── 2) обычный режим: ищём wake-word ─────────────────────
+            if kaldi_rec.AcceptWaveform(pcm_bytes):
+                txt = json.loads(kaldi_rec.Result()).get('text', '')
+                if any(w in txt for w in ('джарвис', 'jarvis')):
+                    wake_worder = True
+            else:
+                part = json.loads(kaldi_rec.PartialResult()).get('partial', '')
+                if any(w in part for w in ('джар', 'жар', 'jarv')):
+                    wake_worder = True
+
+            # ── 3) если поймали имя ─────────────────────────────────
+            if wake_worder:
+                wake_worder = False  # гасим флаг
+                listening = True  # переходим к приёму команды
+                kaldi_rec.Reset()  # чистим буфер
+                await play('greet', False)
+                print("Здравствуйте.")
                 ltc = time.time()
-            #! while True делает бесконечный цикл и он не спит
-            #! while time.time() - ltc <= 10: дефолт
-            while time.time() - ltc <= 30: 
-                recorder.start()
-                pcm = recorder.read()
-                sp = struct.pack("h" * len(pcm), *pcm)
-                if kaldi_rec.AcceptWaveform(sp):
-                    recorder.stop()
-
-                    if await va_respond(json.loads(kaldi_rec.Result())["text"],conn):
-                        ltc = time.time()
-                        
-
-                    break
+                counter = 1  # (если временной сброс нужен)
 
         except Exception as err:
             print(f"Unexpected {err=}, {type(err)=}")
             raise
 
-def bing_starter(conn):
-    asyncio.run(working_chat(conn))
 
 def main_starter(conn):
     asyncio.run(main(conn))
 
-def bard_starter(conn):
-    asyncio.run(bard_msg(conn))
+
+def ollama_starter(conn):
+    while True:
+        if conn.poll():
+            try:
+                prompt = conn.recv()
+                from skills.ollama import ollama_ask
+                response = ollama_ask(prompt)
+                conn.send([response])
+            except Exception as e:
+                conn.send(["[Ошибка Ollama] %s" % e])
+
 
 if __name__ == "__main__":
-    # чтение config.ini
-    global config
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    # bard / bing
-    global choose_ai_model
-    choose_ai_model = config.get('ai','model') # bard / bing
-    # если пользователь выбрал bing, то запускается bing_starter, иначе запускается bard_starter
-    if choose_ai_model == 'bing':
-        parent_conn, child_conn = Pipe()
-        p1 = Process(target=main_starter, args=(parent_conn,))
-        p2 = Process(target=bing_starter, args=(child_conn,))
-        p1.start()
-        p2.start()
-        p1.join()
-        p2.join()
+    parent_conn, child_conn = Pipe()
+    p1 = Process(target=main_starter, args=(parent_conn,))
+    # p2 = Process(target=ollama_starter, args=(child_conn,))
+    p1.start()
+    # p2.start()
+    p1.join()
+    # p2.join()
 
-    elif choose_ai_model == 'gpt3':
-        parent_conn, child_conn = Pipe()
-        p1 = Process(target=main_starter, args=(parent_conn,))
-        p2 = Process(target=gpt_3_ask,args=(child_conn,))
-        p1.start()
-        p2.start()
+    try:
         p1.join()
-        p2.join()   
-
-    else:
-        parent_conn,child_conn = Pipe()
-        p1 = Process(target=main_starter, args=(parent_conn,))
-        p2 = Process(target=bard_starter, args=(child_conn,))
-        p2.start()
-        p1.start()
-        p2.join()
-        p1.join()
+        # p2.join()
+    except KeyboardInterrupt:
+        print("\n[Jarvis] Ctrl+C (главный) – завершаю процессы…")
+        # for p in (p1):
+        if p1.is_alive():
+            p1.terminate()  # мгновенно убивает
+            p1.join(3)  # ждём ≤ 3 с для надёжности
+        print("[Jarvis] Готово, можно вводить команды.")

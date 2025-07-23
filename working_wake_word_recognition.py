@@ -13,8 +13,8 @@ def main(conn=None):
     from rich import print
     config = configparser.ConfigParser()
     config.read('config.ini')
-    keyward_path = r'vosk_+_pvporcupine\отмена_ru_windows_v2_2_0.ppn'
-    model_path = r'vosk_+_pvporcupine\porcupine_params_ru.pv'
+    keyward_path = r'models/vosk_+_pvporcupine\отмена_ru_windows_v2_2_0.ppn'
+    model_path = r'models/vosk_+_pvporcupine\porcupine_params_ru.pv'
     PICOVOICE_TOKEN   = config.get('PICOVOICE_TOKEN','token')
     porcupine         = pvporcupine.create(
         access_key    = PICOVOICE_TOKEN,

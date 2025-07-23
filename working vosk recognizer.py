@@ -9,7 +9,7 @@ BUFFER_SIZE       = 2048 # Количество байт в буфере зап�
 SAMPLE_RATE       = 16000 # Частота дискретизации
 
 # Загружаем модель и создаем распознаватель
-model = vosk.Model("model_small")
+model = vosk.Model("models/model_small")
 rec   = vosk.KaldiRecognizer(model, SAMPLE_RATE)
 
 # Создаем объект pyaudio для записи аудио

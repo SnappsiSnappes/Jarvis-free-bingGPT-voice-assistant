@@ -26,7 +26,7 @@ def working_getter_from_db(text):
             return data2
 
     # Импортируем необходимые библиотеки
-    from fuzzywuzzy import fuzz
+    from rapidfuzz import fuzz
 
     # Функция для получения данных из базы данных
     def getter_from_db():

@@ -1,0 +1,24 @@
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+env/
+venv/
+.venv/
+# Environment variables
+.env
+.env.*         # e.g., .env.local, .env.test
+
+# Dependency directories
+__pypackages__/
+.pytest_cache/
+htmlcov/
+coverage.xml
+*.log
+
+# IDE / редакторы
+.vscode/
+.idea/
+*.sublime-*
+*.iml

@@ -1,168 +1,370 @@
-# Репозиторий оставлен до лучших времен 
+# Jarvis-Pi — голосовой ассистент и «мозг» для персонального робота
 
-### Платформа - Windows 7 / 10 x64
-### python 3.10.6
-<details>
-  <summary>Установка</summary>
-  
-- Имя пользователя Windows не должно содержать кирилицы.
-- Клонируйте репозиторий на свой компьютер.
-- ОПЦИОНАЛЬНО:
- Создайте виртуальное окружение с помощью команды в **CMD/powershell** 
-```python -m venv venv``` и активируйте его ```.\venv\Scripts\activate``` 
-( Чтобы сделать это нажмите на пустое место в директории SHIFT+RIGHT CLICK > Открыть CMD здесь или Открыть PowerShell здесь)
-- Python 3.10.6 x64 - проверено
-- Установите все зависимости с помощью команды 
+> Русскоязычный оффлайн-ассистент с горячей перезагрузкой плагинов, поддержкой локальной LLM через Ollama, выводом состояния на OLED через ESP32/WebSocket и расширяемым фреймворком скиллов.
+
+---
+
+## Содержание
+
+1. [Возможности](#возможности)
+2. [Структура проекта](#структура-проекта)
+3. [Аппаратные требования](#аппаратные-требования)
+4. [Установка на Raspberry Pi OS](#установка-на-raspberry-pi-os)
+5. [Подключение ESP32 + OLED](#подключение-esp32--oled)
+6. [Пример кода для Arduino IDE](#пример-кода-для-arduino-ide)
+7. [Разработка своих скиллов](#разработка-своих-скиллов)
+8. [Roadmap и дальнейшее развитие](#roadmap-и-дальнейшее-развитие)
+9. [Лицензия](#лицензия)
+
+---
+
+## Возможности
+
+* Активация по ключевой фразе «Джарвис» (Picovoice Porcupine + Google-STT)
+* Оффлайн-STT Vosk (`model_small`)
+* Натуральный TTS Piper-TTS с разбиением по 180 символам
+* Горячая перезагрузка скиллов из `/skills` через `jarvis_skills.py`
+* Fuzzy-распознавание команд (RapidFuzz)
+* БД-лаунчер приложений/сайтов (SQLite + `working_getter_from_db.py`)
+* Интеграция с локальной LLM (Ollama, отдельный процесс)
+* Вывод состояния (время, погода, произвольные тексты) на OLED-дисплей через ESP32+WebSocket
+
+---
+
+## Структура проекта
+
 ```
-python.exe -m pip install --upgrade pip
-pip install -r requirements.txt
-pip install -r requirements2.txt
-pip install -r requirements3.txt
+.
+├── ai_launch_no_PVC.py    # главный event-loop, менеджер процессов и диспетчер скиллов
+├── display/               # драйверы для вывода (console.py, websocket.py)
+├── skills/                # плагины-скиллы (time_ru.py, weather_ru.py, ...)
+├── working_tts.py         # адаптер Piper-TTS
+├── working_getter_from_db.py
+├── requirements.txt
+└── README.md
 ```
-Если видите ошибки то разберитесь с ними и установити зависимости. Проблемный модуль - PyAudio
-Требуется много зависимостей связанных с C++ Redist, и прочие. К сожалению пока так.
-- установите ffmpeg корректным образом, внизу есть пояснение
-- отредактируйте config.ini и выберите модель bard/bing
-- запуск
+
+---
+
+## Аппаратные требования
+
+| Компонент |          Минимум         |        Рекомендовано       |
+| :-------: | :----------------------: | :------------------------: |
+|    SBC    |   Raspberry Pi 5 (8 GB)  |    + активное охлаждение   |
+|  Питание  |          5 V 3 A         |  Power-bank 5 V 20000 mAh  |
+|  Микрофон |       USB-гарнитура      |     ReSpeaker 2-Mic HAT    |
+|  Дисплей  | ESP32 + OLED 0.96″ (I²C) | SPI IPS 1.3–2″ или HDMI 5″ |
+|  Динамик  |     3.5 мм / I²S amp     |       3 Вт + mini‑amp      |
+
+---
+
+## Установка на Raspberry Pi OS (64‑bit)
+
+```bash
+# 1. Клонируем репозиторий
+git clone https://github.com/yourname/jarvis-pi.git
+cd jarvis-pi
+
+# 2. Системные зависимости
+sudo apt update
+sudo apt install -y python3-pip portaudio19-dev libasound2-dev
+
+py -3.10 -m venv venv
+# 3. Python-библиотеки
+pip3 install -r requirements.txt
+
+# 4. Копируем модель Piper
+mkdir -p piper && cp ru-RU-irina-medium.* piper/
+
+# 5. Настройка микрофона
+#   Откройте config.ini и в секции [MIC] укажите microphone_index
+nano config.ini
+
+# 6. Запуск
+python3 ai_launch_no_PVC.py
 ```
-python ai_launch.py
-или
-python ai_launch_no_PVC.py
+
+---
+
+## Подключение ESP32 + OLED
+
+1. В Arduino IDE установите библиотеки: `WebSockets`, `ArduinoJson`, `U8g2`.
+2. Скопируйте скетч из раздела ниже и загрузите на ESP32 (плата: ESP32 Dev Module).
+3. Убедитесь, что ESP32 и Raspberry Pi в одной Wi‑Fi сети.
+4. Jarvis слушает WebSocket на порту 8765.
+
+При старте в Serial Monitor увидите:
+
 ```
-</details>
+[WS] connected
+```
 
-### UPD: смотрите видео
+— сразу же на OLED отобразится текущее время, погода и актуальный текст.
 
-# Jarvis - ваш голосовой ассистент
+---
 
+## Система эмоций
 
-![1382_wide_small2](https://user-images.githubusercontent.com/111605401/235349662-31b3ea1e-c4f7-43bc-9959-792e51a27a2d.png)
-<details>
-  <summary>Видео</summary>
+> Полностью модульная, декомпозирована на **manager ↔ state ↔ driver**.
 
-[![Watch the video](https://user-images.githubusercontent.com/111605401/235522397-1c1fdd5f-6dc1-4dea-9b4b-aa0c260baabd.png)](https://www.youtube.com/watch?v=BE-5cg2RLVs)
-</details>
+### 1. `emotion/state.py`
 
-<details>
-<summary>Возможности</summary>
+* Перечисление `Emotion` (`NEUTRAL`, `HAPPY`, `THINKING`, `ANGRY`, `SAD`, …)
+* Таблица «idle‑эмоций» и их весов
 
-- Голосовое обращение к BingGPT, с возможностью отменить запрос, чтобы отменить запрос достаточно сказать слово ОТМЕНА, чтобы сделать запрос - после слова Джарвис скажите "Скажи ...(ваш запрос)" прим. Скажи кто такие рыцари? 
-- Возможность создавать свои команды - запускать свои файлы и открывать свои сайты - для этого используйте working_gui.py или working_gui.exe в корневом каталоге.
-- быстрая реакция, лучшее качество записи и воспроизведения, использованы лучшие бесплатные библиотеки.
-- Автоматизированное подключение через прокси. Работает стабильно из РФ.
-</details>
+### 2. `emotion/manager.py`
 
-### Список команд - в yaml документе commands.yaml 
+* Синглтон‑класс, подписывается на события `events.broker`
+* Алгоритм:
 
+  * при простое каждые *N* секунд публикует новую эмоцию из idle‑списка
+  * на `user_query_started` → `THINKING`
+  * на `user_query_ended`   → пауза 1 с → новую idle‑эмоцию
 
-<details>
-  <summary>Инструкции Bard</summary>
-  
-- ``приемущества :`` легко, быстро
-- ``недостатки :`` нет.
+### 3. `emotion/drivers.py`
 
-  1) Зайдите на сайт , используя впн , получите доступ к барду , используя свой гугл аккаунт - https://bard.google.com/?hl=en ![image](https://github.com/SnappsiSnappes/Jarvis-free-bingGPT-voice-assistant/assets/111605401/1a908389-6356-4c2b-a674-3576a74a34d6)
-  2) вставьте токен в config.ini - [bard_token] token1 = ![image](https://github.com/SnappsiSnappes/Jarvis-free-bingGPT-voice-assistant/assets/111605401/a3c6d1c5-3c68-4f07-92ce-cf5b08c90713)
-  3) UPDATE теперь нужно 2 токена , вот второй = __Secure-1PSIDTS 
+* **WebSocketEmotionDriver** — адаптер к `display`‑слою: переводит `Emotion → DisplayItem(kind="emotion")` и высылает клиентам.
 
-  
-</details>
+Такое разделение позволяет в будущем:
 
-<details>
-  <summary>Инструкции Bing</summary>
+* добавлять датчики (температура, освещённость, столкновение) — просто публикуем событие → manager сам решит, какую эмоцию поставить
+* заменить драйвер глазами на TFT или гэросток — достаточно другой driver‑класс
 
-- ``Приемущества:`` Качественные ответы, креатив, грамотность
-- ``Недостатки:`` Необходимость установки MS EDGE браузера, учетная запись Microosft, ВПН, необходимость обновлять cookies раз в 12 часов, нестабильность работы в последнее время. Долгое время ожидания ответа.
-  
-1) Сначала зарегистрируйте учетную запись Microsoft и скачайте последнюю версию Microsoft Edge.
-2) Используйте VPN, если вы находитесь в России. (РАСШИРЕНИЕ BROWSEC: https://chrome.google.com/webstore/detail/browsec-vpn-free-vpn-for/omghfjlpggmjjaagoclmmobgdodcjboh)
-3) Перейдите на https://www.bing.com/ и получите доступ к чату на основе GPT в Bing (установите страну своей учетной записи как США).
-4) Скачайте расширение https://chrome.google.com/webstore/detail/cookie-editor/hlkenndednhfkekhgcdicdfddnkalmdm.
-5) Перейдите на домашнюю страницу Bing и нажмите кнопку "Export cookies" в формате json в буфер обмена.
-6) Создайте файл внутри директории со скриптом, назовите его - 'cookies.json' и вставьте свои куки в этот файл.
-7) Следуйте инструкциям Использование.
-</details>
+### 4. Серийный API для скиллов
 
+Любой python‑скилл может переключить эмоцию:
 
+```python
+from emotion import publish_emotion
+publish_emotion(Emotion.HAPPY)
+```
 
+---
 
-<details>
-  <summary>Инструкции gpt3</summary>
-  
-- ``приемущества :`` Очень легко, очень быстро, зачастую этого достаточно обычному пользователю
-- ``недостатки :`` Не умеет пользоваться интернетом, знания ограничены интернетом до 2021 года
+## Пример кода для Arduino IDE
 
-  1) в config.ini в графе ai, сделайте model = gpt3
-  2) pip install -r requirements3.txt
+```cpp
+#include <WiFi.h>
+#include <WebSocketsClient.h>
+#include <ArduinoJson.h>
+#include <U8g2lib.h>
 
-  
-</details>
+#include "Face.h"
 
+#include <map>
+#include <string>
+#include <functional>
 
-<details>
-<summary> Авто замена cookies.json и прокси </summary>
+// Настройки Wi-Fi / WS
+const char* WIFI_SSID     = "Redmi_A33D";
+const char* WIFI_PASSWORD = "88882222";
+const char* WS_HOST       = "192.168.31.125";
+const uint16_t WS_PORT    = 8765;
+const char* WS_PATH       = "/";
 
-- В случае ошибки установки связи с BingGPT - произойдет автоматическая замена cookies.json на новые. За это отвечает working_edge_update_cookies.py
-- Авто-замена cookies работает только от python 3.10 , то есть у тех у кого Windows 10 , тем у кого Windows 7 придется обновлять cookies.json раз в 12 часов.
-## принцип обновления cookies
-1) Выйдите из Microsoft EDGE браузера
-- запустите ai_launch.py или working_update_cookies.py
-- ![image](https://github.com/SnappsiSnappes/Jarvis-free-bingGPT-voice-assistant/assets/111605401/5bc7cfa2-cd24-40ae-8e9a-0d4bec9357ef)
-2) вы увидите в консоли Trying to update cookies 
-3) ждите 
-4) далее увидите в терминале много текста - значит все ок, cookies обновлены. Файл cookies.json создан
-5) ждите до появления строчки - __"Успешное соединение"__ потом можете спокойно говорить свой запрос.
-  
-- Совет: на MS EDGE ставьте расширение впн - Browsec  - постоянно включенным.
-</details>
+// OLED-дисплей
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+WebSocketsClient webSocket;
 
-<details>
-<summary>Проблемы с правильной установкой ffmpeg</summary>
-  
-- Как понять что ffmpeg установлен? - ввидите ffmpeg в CMD или PowerSHELL
-1) Установите ffmpeg любым удобным для вас способом. https://ffmpeg.org/download.html
-- распокуйте папку в любую директорию (например C:/ffmpeg) и занесите в переменную PATH путь до например C:/ffmpeg/bin/
-2) быстрый способ - Установите Chocolately, используя этот код в PowerShell:```
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))```
-Затем, используя PowerShell, выполните: ```choco install ffmpeg```
-3) другой способ : https://www.youtube.com/watch?v=jZLqNocSQDM посмотрите видео инструкцию
-</details>
-
-<details>
-<summary>Использование</summary>
-  
-- Замените ключ в config.ini - [PICOVOICE_TOKEN]  на свой API-ключ. (зарегестрируйтесь на https://console.picovoice.ai ,чтобы получить его бесплатно)
-- Запустите скрипт ai_launch.py
-- Скажите Джарвис -  чтобы разбудить бота.
-- Ваш запрос начинается на - "Скажи","Расскажи" - тогда Джарвис пойдет в интернет и спросит у BingGPT ответ на ваш запрос, во время запроса можно сказать слово ОТМЕНА - чтобы отменить. Если у вас ошибка - "Перезагрузите джарвиса" или какая то иная, проверьте создали ли вы cookies.json
-- Создавайте команды - например Открой инстаграм, открой гугл и тд.
-- Используйте working_gui.py чтобы добавить свои команды .
-вот так выглядит интерфейс добавления своих команд.
-### ![image](https://user-images.githubusercontent.com/111605401/235350281-a9ed8476-584a-4f2c-aad8-0ec2447635ba.png)
-### ![image](https://user-images.githubusercontent.com/111605401/235444261-15d79af0-36eb-4b36-b485-9c3f57f88540.png)
-</details>
-
-<details>
-<summary> Обратите внимание: </summary>
-  
-- Первое - октрой/запусти , открой - указывайте сайт в данные https:// somewebsite.com (можно без https/http), запусти - указыайте метоположение файла пример - c:/dir/my_file.exe.
-- Слово открой/запусти писать не надо.
-- В графе "Что сказать" - пишите  через запятую то что необходимо услышать программе, в случае обнаружения будет выполнен запуск - того что вы напишите в "Данные". Используйте длинные слова. Пример "Что сказать": контакты, контакт "Данные" : vk.com  
-- Данные - о том что писать , сказанно выше. c:/dir/my_file.exe. - в запусти. https:// somewebsite.com (можно без https/http), - в открой.
-Ваши команды находятся в базе данных mydatabase.db , если его удалить, тогда он создастся снова, и будет пуст.
-- Скажите Джарвису то, что написали в графе - "Что говорить", и файл, или веб сайт, будет открыт.
-- В файле config.ini [add_to_prompt]
-add_to_prompt = можно указать какой нибудь стиль выдачи, который будет все время добавляться к вашим запросом в бинг - в КОНЕЦ запроса. Например если написать - напиши коротко, в простом стиле. Тогда все ответы будут короткими и упрощенными на сколько это возможно. ВАЖНО! Строчка должна быть в кавычках вся. 
-- В файле config.ini - можно указать индекс микрофона, по умолчанию это -1 
-### Схема работы 😊 
-![схема](https://user-images.githubusercontent.com/111605401/235351434-7f6c7d9a-8289-4e02-b4d2-07ddc94b2af5.png)
-</details>
+// GLOBALS
+Face *face;
 
 
-donate - https://www.donationalerts.com/r/snappes_tv
-<details>
-<summary>Все файлы с приставкой working_...</summary>
+// Определяем тип: метод Expression без аргументов
+using ExprFn = std::function<void()>;
 
-работают автономно, в их коде содержится подробное описание и принцип работы.
-По сути это файлы конструкторы, можете использовать их для своих программ
-</details>
+// Глобальный map
+std::map<String, ExprFn> emotionFns;
+
+// ——————————————————————————————
+// Оверлей для времени/погоды/текста
+String currentTime, currentWeather, currentMainText;
+bool textVisible = false;
+unsigned long lastTextMillis = 0;
+const unsigned long TEXT_DISPLAY_TIMEOUT = 5000;
+
+struct Region { uint8_t x,y,w,h; };
+const Region TIME_R    = {  0,  0, 60, 16 };
+const Region WEATHER_R = {100,  0, 28, 16 };
+const Region MAIN_R    = {  0, 16,128, 48 };
+
+void renderOverlay() {
+  if (currentTime.length()) {
+    u8g2.setFont(u8g2_font_5x8_t_cyrillic);
+    u8g2.drawUTF8(TIME_R.x, TIME_R.y + 8, currentTime.c_str());
+  }
+  if (currentWeather.length()) {
+    u8g2.setFont(u8g2_font_5x8_t_cyrillic);
+    u8g2.drawUTF8(WEATHER_R.x, WEATHER_R.y + 8, currentWeather.c_str());
+  }
+  if (textVisible && currentMainText.length()) {
+    static String lines[10];
+    int n = 0;
+    String word, line;
+    for (int i = 0; i <= currentMainText.length(); ++i) {
+      char c = i < currentMainText.length() ? currentMainText[i] : ' ';
+      if (c==' '||c=='\n') {
+        if (word.length()) {
+          String cand = line.length() ? line + ' ' + word : word;
+          if (u8g2.getUTF8Width(cand.c_str()) <= MAIN_R.w) {
+            line = cand;
+          } else {
+            lines[n++] = line;
+            line = word;
+          }
+          word = "";
+        }
+        if (c=='\n') {
+          lines[n++] = line;
+          line = "";
+        }
+      } else {
+        word += c;
+      }
+    }
+    if (line.length()) lines[n++] = line;
+    int y = MAIN_R.y + 40;
+    u8g2.setFont(u8g2_font_5x8_t_cyrillic);
+    for (int i = 0; i < n; ++i) {
+      u8g2.drawUTF8(MAIN_R.x, y, lines[i].c_str());
+      y += 10;
+    }
+  }
+}
+
+// WS-callback с логами
+void webSocketEvent(WStype_t t, uint8_t* p, size_t l) {
+  if (t != WStype_TEXT) return;
+  Serial.print("[WS] got TEXT ("); Serial.print(l); Serial.println(" bytes)");
+  Serial.write(p, l);
+  Serial.println();
+
+  StaticJsonDocument<256> doc;
+  DeserializationError err = deserializeJson(doc, p, l);
+  if (err) {
+    Serial.print("[WS] JSON error: "); Serial.println(err.c_str());
+    return;
+  }
+
+  const char* kind = doc["kind"];
+  const char* txt  = doc["payload"];
+  Serial.print("[WS] Parsed kind=\""); Serial.print(kind);
+  Serial.print("\" payload=\""); Serial.print(txt); Serial.println("\"");
+
+  if (!strcmp(kind,"time")) {
+    currentTime = txt;
+    Serial.print("[EMO] time updated: "); Serial.println(currentTime);
+  }
+  else if (!strcmp(kind,"weather")) {
+    currentWeather = txt;
+    Serial.print("[EMO] weather updated: "); Serial.println(currentWeather);
+  }
+  else if (!strcmp(kind,"text")) {
+    currentMainText = txt;
+    textVisible = true;
+    lastTextMillis = millis();
+    Serial.print("[EMO] main text: "); Serial.println(currentMainText);
+  }
+  else if (!strcmp(kind,"emotion")) {
+    Serial.print("[EMO] Requested emotion: "); Serial.println(txt);
+
+    if (!strcmp(kind,"emotion")) {
+      onEmotionReceived(txt);
+    }
+    else {
+      Serial.println("[EMO] Unknown emotion key!");
+    }
+  }
+}
+
+void onEmotionReceived(const char* txt) {
+  auto it = emotionFns.find(txt);
+  if (it != emotionFns.end()) {
+    it->second();  // вызываем нужный лямбда-обёртанка
+    Serial.print("[EMO] Called "); Serial.println(txt);
+  } else {
+    Serial.print("[EMO] Unknown emotion: "); Serial.println(txt);
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  u8g2.begin();
+
+  emotionFns["normal"]      = [&]() { face->Expression.GoTo_Normal(); };
+  emotionFns["angry"]       = [&]() { face->Expression.GoTo_Angry(); };
+  emotionFns["glee"]        = [&]() { face->Expression.GoTo_Glee(); };
+  emotionFns["happy"]       = [&]() { face->Expression.GoTo_Happy(); };
+  emotionFns["sad"]         = [&]() { face->Expression.GoTo_Sad(); };
+  emotionFns["worried"]     = [&]() { face->Expression.GoTo_Worried(); };  
+  emotionFns["focused"]     = [&]() { face->Expression.GoTo_Focused(); };
+  emotionFns["Annoyed"]     = [&]() { face->Expression.GoTo_Annoyed(); };
+  emotionFns["surprised"]   = [&]() { face->Expression.GoTo_Surprised(); };
+  emotionFns["skeptic"]     = [&]() { face->Expression.GoTo_Skeptic(); };
+  emotionFns["frustrated"]  = [&]() { face->Expression.GoTo_Frustrated(); };
+  emotionFns["unimpressed"] = [&]() { face->Expression.GoTo_Unimpressed(); };
+  emotionFns["sleepy"]      = [&]() { face->Expression.GoTo_Sleepy(); };
+  emotionFns["suspicious"]  = [&]() { face->Expression.GoTo_Suspicious(); };
+  emotionFns["squint"]      = [&]() { face->Expression.GoTo_Squint(); };
+  emotionFns["furious"]     = [&]() { face->Expression.GoTo_Furious(); };
+  emotionFns["scared"]      = [&]() { face->Expression.GoTo_Scared(); };
+  emotionFns["awe"]         = [&]() { face->Expression.GoTo_Awe(); };  
+
+  // Инициализируем лицо и поведение
+  face = new Face(/* screenWidth = */ 128, /* screenHeight = */ 64, /* eyeSize = */ 40);
+  face->Expression.GoTo_Normal();
+  face->RandomBehavior = false;
+  face->RandomBlink = true;
+  face->Blink.Timer.SetIntervalMillis(5000);
+  face->RandomLook = true;
+
+  // Wi-Fi + WebSocket
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED) delay(100);
+  webSocket.begin(WS_HOST, WS_PORT, WS_PATH);
+  webSocket.onEvent(webSocketEvent);
+  webSocket.setReconnectInterval(5000);
+}
+
+void loop() {
+  webSocket.loop();
+
+  if (textVisible && millis() - lastTextMillis > TEXT_DISPLAY_TIMEOUT) {
+    textVisible = false;
+    Serial.println("[EMO] MAIN text timeout, hiding text");
+  }
+  //face->Update();
+  static unsigned long last = 0;
+  if (millis() - last > 100) {
+    last = millis();
+    u8g2.firstPage();
+    do {
+      face->Update();
+      renderOverlay();
+    } while (u8g2.nextPage());
+  }
+}
+```
+
+---
+
+## Разработка своих скиллов
+
+В папке `/skills` создайте Python-файл:
+
+```python
+PATTERNS = ["привет", "здравствуй"]
+def handle(text: str) -> str:
+    return "Привет, создатель!"
+```
+
+Скилл автоматически подхватится и будет вызываться по fuzzy-совпадению.
+
+---
+
+## Roadmap и лицензия
+
+* v0.5: ESP32 + OLED через WebSocket
+* v1.0: ROS, indoor SLAM
+
+**MIT License**.

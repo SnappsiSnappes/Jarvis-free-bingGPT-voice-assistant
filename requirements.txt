@@ -1,44 +1,36 @@
-vosk==0.3.45
-simplejson==3.18.3
-python-json-logger==2.0.6
-jsonschema==4.17.3
-jsonpointer==2.3
-fastjsonschema==2.16.2
-async-timeout==4.0.2
-antlr4-python3-runtime==4.9.3
-omegaconf==2.3.0
-asyncio==3.4.3
-pywin32-ctypes==0.2.0
-pvporcupine==2.2.0
-simpleaudio==1.0.4
-PyYAML==6.0
-sounddevice==0.4.6
-comtypes==1.1.14
-torch==1.12.1
-fuzzywuzzy==0.18.0
-PyAudio==0.2.13
-pvrecorder==1.1.1
-pycaw==20230407
-rich==13.3.3
-pydub==0.25.1
-speechkit==2.2.2
+# ────────── Аудио-ввод/вывод ──────────
+sounddevice==0.4.6          # воспроизведение WAV
+pyaudio==0.2.14             # fallback-запись микрофона
+pvrecorder==1.2.7           # PortAudio wrapper без PVC
+
 SpeechRecognition==3.10.0
-EdgeGPT==0.2.0
-num2words==0.5.12
-numpy==1.23.5
-Levenshtein==0.20.9
+simpleaudio==1.0.4
+
+# ────────── Wake-word и STT ──────────
+vosk==0.3.45                # оффлайновое RU-распознавание
+pvporcupine==3.0.3          # «Джарвис» триггер
+
+# ────────── TTS ──────────
+piper-tts==1.3.0            # + onnxruntime, numpy подтянутся автоматически
+
+# ────────── Обработка текста / логика ──────────
+rapidfuzz==3.6.1            # вместо python-Levenshtein
 transliterate==1.10.2
-configparser==5.3.0
-click==8.1.3
-sqlparse==0.3.0
-proxybroker2==2.0.0a4
-bardapi
-GoogleBard
-multidict==6.0.4
-selenium-stealth==1.0.6
-msedge-selenium-tools==3.141.4
-edgedriver-autoinstaller==0.2.1
-nest-asyncio==1.5.6
-langid==1.1.6
-translatepy==2.3
-keyboard
+num2words==0.5.13
+regex==2023.12.25           # улучшенный re-engine
+#ruaccent==1.5.8.3
+
+# ────────── Конфиги, загрузки, CLI ──────────
+pyyaml==6.0.1
+configparser==6.0.1
+requests==2.32.4
+keyboard==0.13.5
+click==8.1.7
+rich==13.7.1
+
+# ────────── Управление громкостью (Windows) ──────────
+pycaw==20230407
+comtypes==1.2.0
+
+
+rich==13.7.1
