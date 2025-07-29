@@ -2,13 +2,14 @@
 sounddevice==0.4.6          # воспроизведение WAV
 pyaudio==0.2.14             # fallback-запись микрофона
 pvrecorder==1.2.7           # PortAudio wrapper без PVC
+pydub==0.25.1
+ffmpeg==1.4
 
 SpeechRecognition==3.10.0
 simpleaudio==1.0.4
 
 # ────────── Wake-word и STT ──────────
 vosk==0.3.45                # оффлайновое RU-распознавание
-pvporcupine==3.0.3          # «Джарвис» триггер
 
 # ────────── TTS ──────────
 piper-tts==1.3.0            # + onnxruntime, numpy подтянутся автоматически
@@ -26,11 +27,15 @@ configparser==6.0.1
 requests==2.32.4
 keyboard==0.13.5
 click==8.1.7
-rich==13.7.1
 
 # ────────── Управление громкостью (Windows) ──────────
 pycaw==20230407
 comtypes==1.2.0
 
-
 rich==13.7.1
+
+opencv-python==4.11.0.86   # или обычный opencv-python, если нужна отладочная графика
+mediapipe
+numpy>=1.26
+
+pyserial==3.5

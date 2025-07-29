@@ -17,8 +17,8 @@ from typing import Literal, Union
 
 @dataclass
 class DisplayItem:
-    kind:    Literal["text", "icon", "image", "rect", "line", "weather", "time", "emotion"]
-    payload: Union[str, bytes]     # для text — строка, для icon — ключ в наборе
+    kind:    Literal["text", "icon", "image", "rect", "line", "weather", "time", "emotion", "servo", "frame"]
+    payload: Union[str, bytes, dict]     # для text — строка, для icon — ключ в наборе
 
 
 class DisplayDriver(ABC):

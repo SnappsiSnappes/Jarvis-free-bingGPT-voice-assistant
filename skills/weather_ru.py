@@ -1,35 +1,36 @@
-# skills/weather_ru.py
+# -*- coding: utf-8 -*-
+"""skills/weather_ru.py — погода с расширенным логированием
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+• Переведён на централизованный логгер (`logging_config.setup_logging`).
+• Детальные логи: старт/финиш HTTP‑запросов, время отклика, коды ошибок,
+  выбранный источник, результаты парсинга, исключения.
+• Все `print()` заменены на `log.debug/info/warning/error`.
 """
-Мини-скилл «Погода» с резервированием
-
-Алгоритм:
-1. Сначала пытаемся получить прогноз с wttr.in (таймаут 1 с).
-2. Если wttr.in не отвечает или отдаёт ошибку → берём данные из Open‑Meteo.
-3. Формат и набор паттернов остались прежними: «погода», «погода завтра» и т.д.
-
-Переменные окружения
---------------------
-WTTR_LAT, WTTR_LON   — координаты для обоих сервисов
-JARVIS_CITY          — название города в родительном падеже («в Магнитогорске»)
-"""
-
 from __future__ import annotations
-import os, re, requests, datetime
-from typing import Dict
 
-from display import get_driver, DisplayItem
+import datetime as _dt
+import os as _os
+import re as _re
+import time as _time
+from typing import Dict, Tuple
 
-# ─── Настройки ────────────────────────────────────────────────────────────
-LAT: str = os.getenv("WTTR_LAT", "53.37977235908946")
-LON: str = os.getenv("WTTR_LON", "58.990413992217746")
-CITY: str = os.getenv("JARVIS_CITY", "Магнитогорске")
+import requests as _rq
 
-WTTR_TIMEOUT: int = 1   # секунда — как попросил пользователь
-OPENMETEO_TIMEOUT: int = 4
-FORECAST_DAYS: int = 3
+from display import DisplayItem, get_driver
+from logging_config import setup_logging
 
-AUTO_UPDATE_INTERVAL = 1800
-# ──────────────────────────────────────────────────────────────────────────
+# ────────────────────────── LOGGING ──────────────────────────────
+log = setup_logging(__name__)
+
+# ────────────────────────── CONFIG ───────────────────────────────
+LAT: str = _os.getenv("WTTR_LAT", "53.37977235908946")
+LON: str = _os.getenv("WTTR_LON", "58.990413992217746")
+CITY: str = _os.getenv("JARVIS_CITY", "Магнитогорске")
+WTTR_TIMEOUT = 1           # сек
+OPENMETEO_TIMEOUT = 4      # сек
+FORECAST_DAYS = 3
+AUTO_UPDATE_INTERVAL = 1800  # сек для дисплея
+
 _ICON = {
     0: "☀️", 1: "⛅", 2: "☁️",
     62: "🌧️", 73: "🌨️", 45: "🌫️",
@@ -67,46 +68,65 @@ PATTERNS = BASE_PATTERNS + \
     [f"погода в {d}" for d in WEEKDAYS_RU] + \
     [f"какая погода в {d}" for d in WEEKDAYS_RU]
 
-# ─── Вспомогалка для склонения «градус/градуса/градусов» ────────────────
-def _plural(n: int, forms: tuple[str,str,str]) -> str:
+# ────────────────────────── UTILS ────────────────────────────────
+
+def _plural(n: int, forms: Tuple[str, str, str]) -> str:
     n = abs(n) % 100
-    if 11 <= n <= 19: return forms[2]
+    if 11 <= n <= 19:
+        return forms[2]
     i = n % 10
-    if i == 1: return forms[0]
-    if 2 <= i <= 4: return forms[1]
+    if i == 1:
+        return forms[0]
+    if 2 <= i <= 4:
+        return forms[1]
     return forms[2]
 
-# ─── Определяем, какой день спросили ─────────────────────────────────────
+
 def _detect_offset(text: str) -> int:
+    """Определяем, о каком дне спрашивает пользователь."""
     t = text.lower()
-    today = datetime.date.today()
-    if "послезавтра" in t: return 2
-    if "завтра" in t: return 1
+    today = _dt.date.today()
+    if "послезавтра" in t:
+        return 2
+    if "завтра" in t:
+        return 1
     for delta in range(1, FORECAST_DAYS):
-        if WEEKDAYS_RU[(today + datetime.timedelta(days=delta)).weekday()] in t:
+        if WEEKDAYS_RU[(today + _dt.timedelta(days=delta)).weekday()] in t:
             return delta
-    m = re.search(r"(\d{1,2})[.\s](\d{1,2})", t)  # простая дата 12.07
+    m = _re.search(r"(\d{1,2})[.\s](\d{1,2})", t)
     if m:
         day, month = map(int, m.groups())
         try:
-            target = datetime.date(today.year, month, day)
+            target = _dt.date(today.year, month, day)
             delta = (target - today).days
-            if 0 <= delta < FORECAST_DAYS: return delta
+            if 0 <= delta < FORECAST_DAYS:
+                return delta
         except ValueError:
             pass
     return 0
 
-# ─── Запрос к wttr.in ────────────────────────────────────────────────────
+# ────────────────────────── HTTP WRAPPERS ────────────────────────
+
+def _timed_get(url: str, timeout: int) -> _rq.Response:
+    t0 = _time.perf_counter()
+    resp = _rq.get(url, timeout=timeout)
+    dt = (_time.perf_counter() - t0) * 1000
+    log.debug("GET %s → %s in %.0f ms", url, resp.status_code, dt)
+    resp.raise_for_status()
+    return resp
+
+# wttr.in --------------------------------------------------------
 
 def _fetch_wttr(lat: str, lon: str):
     url = f"https://wttr.in/{lat},{lon}?format=j1"
-    r = requests.get(url, timeout=WTTR_TIMEOUT)
-    r.raise_for_status()
-    return r.json()
+    return _timed_get(url, WTTR_TIMEOUT).json()
+
+
+def _wttr_desc(obj) -> str:
+    return (obj.get("lang_ru", [{}])[0].get("value") or obj["weatherDesc"][0]["value"]).lower()
 
 
 def _build_answer_wttr(city: str, data, offset: int) -> str:
-    """Формируем фразу, основываясь на JSON от wttr.in"""
     if offset == 0:
         cur = data["current_condition"][0]
         temp = round(float(cur["temp_C"]))
@@ -117,22 +137,15 @@ def _build_answer_wttr(city: str, data, offset: int) -> str:
         tmax = round(float(daily["maxtempC"]))
         tmin = round(float(daily["mintempC"]))
         temp = round((tmax + tmin) / 2)
-        # Берём описание из середины дня (hourly[4] ≈ 12:00)
-        cond_ru = _wttr_desc(daily["hourly"][4] if len(daily["hourly"]) > 4 else daily["hourly"][0])
-        prefix = ["Сегодня","Завтра","Послезавтра"][offset] if offset < 3 \
-                 else f"В {WEEKDAYS_RU[(datetime.date.today()+datetime.timedelta(days=offset)).weekday()]}"
-    degree = _plural(temp, ("градус","градуса","градусов"))
-    sign   = "тепла" if temp > 0 else ("мороза" if temp < 0 else "")
+        cond_ru = _wttr_desc(daily["hourly"][4 if len(daily["hourly"]) > 4 else 0])
+        prefix = ["Сегодня", "Завтра", "Послезавтра"][offset] if offset < 3 else (
+            f"В {WEEKDAYS_RU[(_dt.date.today() + _dt.timedelta(days=offset)).weekday()]}"
+        )
+    degree = _plural(temp, ("градус", "градуса", "градусов"))
+    sign = "тепла" if temp > 0 else ("мороза" if temp < 0 else "")
     return f"{prefix} в {city} {abs(temp)} {degree} {sign}, {cond_ru}.".strip()
 
-
-def _wttr_desc(obj) -> str:
-    """Возвращает русское описание явления (если есть) или английское"""
-    if "lang_ru" in obj and obj["lang_ru"]:
-        return obj["lang_ru"][0]["value"].lower()
-    return obj["weatherDesc"][0]["value"].lower()
-
-# ─── Запрос к Open‑Meteо ────────────────────────────────────────────────
+# Open‑Meteo ------------------------------------------------------
 
 def _fetch_openmeteo(lat: str, lon: str):
     url = (
@@ -142,9 +155,7 @@ def _fetch_openmeteo(lat: str, lon: str):
         "&daily=weather_code,temperature_2m_max,temperature_2m_min"
         f"&forecast_days={FORECAST_DAYS}&timezone=auto"
     )
-    r = requests.get(url, timeout=OPENMETEO_TIMEOUT)
-    r.raise_for_status()
-    return r.json()
+    return _timed_get(url, OPENMETEO_TIMEOUT).json()
 
 
 def _build_answer_openmeteo(city: str, data, offset: int) -> str:
@@ -158,58 +169,58 @@ def _build_answer_openmeteo(city: str, data, offset: int) -> str:
         tmin = data["daily"]["temperature_2m_min"][idx]
         temp = round((tmax + tmin) / 2)
         code = data["daily"]["weather_code"][idx]
-        prefix = ["Сегодня","Завтра","Послезавтра"][offset] if offset < 3 \
-                 else f"В {WEEKDAYS_RU[(datetime.date.today()+datetime.timedelta(days=offset)).weekday()]}"
+        prefix = ["Сегодня", "Завтра", "Послезавтра"][offset] if offset < 3 else (
+            f"В {WEEKDAYS_RU[(_dt.date.today() + _dt.timedelta(days=offset)).weekday()]}"
+        )
     cond_ru = WEATHER_CODES_RU.get(code, "")
-    degree = _plural(temp, ("градус","градуса","градусов"))
-    sign   = "тепла" if temp > 0 else ("мороза" if temp < 0 else "")
+    degree = _plural(temp, ("градус", "градуса", "градусов"))
+    sign = "тепла" if temp > 0 else ("мороза" if temp < 0 else "")
     return f"{prefix} в {city} {abs(temp)} {degree} {sign}, {cond_ru}.".strip()
 
-# ─── Точка входа ─────────────────────────────────────────────────────────
+# ────────────────────────── PUBLIC API ───────────────────────────
 
 def handle(text: str) -> str:
+    """Основной скилл‑хендлер."""
     offset = _detect_offset(text)
-    return _build_answer(offset)
+    answer = _build_answer(offset)
+    log.info("Weather answer: %s", answer)
+    return answer
 
 
 def auto_update():
-    """Обновляем погоду на дисплее."""
-    t, icon = _current_for_display()
-    print(f"[LOG] t{t} icon{icon}")
-    driver = get_driver()
+    """Периодический апдейт температуры на дисплее."""
+    temp, icon = _current_for_display()
+    log.debug("Display update: %d°C %s", temp, icon)
+    drv = get_driver()
+    drv.draw(DisplayItem(kind="weather", payload=f"{temp:02d}°C {icon}"))
 
-    # Температура+иконка — в правом верхнем
-    driver.draw(DisplayItem(
-        kind="weather",
-        payload=f"{t:02d} C {icon}"
-    ))
+# ────────────────────────── INTERNALS ────────────────────────────
 
-def _current_for_display() -> tuple[int, str]:
-    """Температура, иконка и фраза для TTS."""
-    # Сначала пробуем wttr.in
+def _current_for_display() -> Tuple[int, str]:
     try:
         wttr = _fetch_wttr(LAT, LON)
         cur = wttr["current_condition"][0]
         temp = round(float(cur["temp_C"]))
         code = int(cur.get("weatherCode", 0))
-        icon = '' #_ICON[code]
+        icon = ""  # можно поставить свои emoji
         return temp, icon
-    except Exception:
-        # Фоллбэк на Open-Meteo
+    except Exception as exc:
+        log.warning("Wttr failed: %s — fallback to OpenMeteo", exc)
         data = _fetch_openmeteo(LAT, LON)
         cw = data.get("current", {})
-        print(f"cw {cw}")
         temp = round(float(cw["temperature_2m"]))
-        print(f"temp {temp}")
-        # Open-Meteo может использовать ключ 'weathercode' или 'weather_code'
         code = int(cw.get("weathercode", cw.get("weather_code", 0)))
-        icon = ''#_ICON[code]
+        icon = ""
         return temp, icon
+
 
 def _build_answer(offset: int = 0) -> str:
     try:
+        log.debug("Using wttr.in source")
         data = _fetch_wttr(LAT, LON)
         return _build_answer_wttr(CITY, data, offset)
-    except Exception:
-        data = _fetch_openmeteo(LAT, LON)
-        return _build_answer_openmeteo(CITY, data, offset)
+    except Exception as exc:
+        log.error("wttr.in failed: %s", exc)
+    log.debug("Using Open‑Meteo fallback")
+    data = _fetch_openmeteo(LAT, LON)
+    return _build_answer_openmeteo(CITY, data, offset)

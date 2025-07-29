@@ -42,7 +42,18 @@ class WebsocketDisplayDriver(DisplayDriver):
         """
         Поднимаем WebSocket-сервер и ждём навсегда.
         """
-        async with websockets.serve(self._handler, self.host, self.port, subprotocols=["arduino"]):
+        # С 12-й версии websockets на Windows есть баг с двойным write_eof().
+        # Поэтому принудительно понижаем до 11.0 **или** ловим исключение ниже.
+        import websockets
+        logger.info("[INFO] websockets %s", websockets.__version__)
+        async with websockets.serve(
+                self._handler,
+                self.host, self.port,
+                subprotocols=["arduino"],
+                # Большие таймауты помогают понять, кто первый закрыл соединение
+                ping_interval=4,
+                ping_timeout=2,
+        ):
             logger.info(f"[SRV] WebSocket server started on {self.host}:{self.port}")
             await asyncio.Future()
 
@@ -78,6 +89,8 @@ class WebsocketDisplayDriver(DisplayDriver):
             "payload": item.payload,
         }
         data = json.dumps(msg)
+
+        logger.info("[WS→CLIENT] %s", data)
 
         # Рассылаем всем клиентам
         async def _send_all():

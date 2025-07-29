@@ -1,133 +1,65 @@
-# -*- coding: utf-8 -*-
-"""
-Piper‑TTS adapter for Jarvis.
-Совместим со всеми релизами piper‑tts ≥ 1.2.0 (включая 1.3+ и nightly).
+from __future__ import annotations
 
-Изменения (2025‑07‑11):
-• Логирование разделено на время генерации и время воспроизведения для каждой части.
-• Разбиение длинного текста: сохраняем предел 180 символов, но теперь режем по законченной фразе (., !, ?, …) — это уменьшает задержки и делает озвучку более естественной.
-"""
-
-import array
+import array as _array
 import inspect
 import os
-import time
 import re
-from typing import List, Iterable
+import time
+import wave
+from typing import Iterable, List
 
-import keyboard
+import keyboard  # type: ignore — requires native build on Win
 import numpy as np
-import sounddevice as sd
-
-from piper import PiperVoice
-from transliterate import translit
+import sounddevice as sd  # type: ignore
+from piper import PiperVoice  # type: ignore — external lib
+from transliterate import translit  # type: ignore
 
 from working_numbers_to_words import numbers_to_wards
 from working_remove_space_in_numbers import remove_spaces_in_numbers
 
-# ────────────────────────── 1. LOAD VOICE ──────────────────────────
-VOICE_ID = "ru-RU-irina-medium" # ru_RU-denis-medium, ru-RU-irina-medium
-SEARCH_DIRS: List[str] = ["./models//piper"]
+# ────────────────────────── 0. LOGGING ────────────────────────────
+from logging_config import setup_logging
+log = setup_logging(__name__)
 
+# ────────────────────────── 1. CONFIG ─────────────────────────────
+VOICE_ID: str = "ru_RU-ruslan-medium" #"ru-RU-irina-medium"  # default voice ID
+SEARCH_DIRS: List[str] = ["./models/piper"]  # where *.onnx lives
+MAX_CHARS: int = 180  # split size per chunk
+TAIL_PAD_SEC: float = 0.3
+USE_CUDA: bool = False  # toggle when GPU available
+
+# ────────────────────────── 2. LOAD VOICE ─────────────────────────
 
 def _find_voice() -> str:
-    """Ищет *.onnx модель по стандартным каталогам."""
+    """Return absolute path to <VOICE_ID>.onnx model (raise if not found)."""
     for base in SEARCH_DIRS:
-        onnx = os.path.join(base, f"{VOICE_ID}.onnx")
-        if os.path.isfile(onnx):
-            return onnx
+        model_path = os.path.join(base, f"{VOICE_ID}.onnx")
+        if os.path.isfile(model_path):
+            return model_path
     raise FileNotFoundError(
-        f"{VOICE_ID}.onnx(.json) не найден. Скопируйте оба файла в:\n  "
-        + "\n  ".join(SEARCH_DIRS)
+        f"{VOICE_ID}.onnx(.json) not found. Expected in: \n  "
+        + "\n  ".join(os.path.abspath(p) for p in SEARCH_DIRS)
     )
 
+VOICE: PiperVoice = PiperVoice.load(_find_voice(), use_cuda=USE_CUDA)
+SAMPLE_RATE: int = VOICE.config.sample_rate
+_SIG_HAS_AUDIO_STREAMING: bool = "audio_streaming" in inspect.signature(
+    VOICE.synthesize
+).parameters
+log.info("Voice '%s' loaded (sr=%d, streaming=%s)", VOICE_ID, SAMPLE_RATE, _SIG_HAS_AUDIO_STREAMING)
 
-VOICE: PiperVoice = PiperVoice.load(_find_voice(), use_cuda=False)
-_SAMPLE_RATE: int = VOICE.config.sample_rate
-
-# заранее проверяем, поддерживает ли метод атрибут «audio_streaming»
-_SIG_HAS_AUDIO_STREAMING: bool = "audio_streaming" in inspect.signature(VOICE.synthesize).parameters
-
-
-# ─────────────────────── 2. HELPERS ────────────────────────────────
-
-def _wait_until_play_done():
-    """Блокирует поток, пока sd.play() не закончит играть или не нажата ESC."""
-    while sd.get_stream().active:
-        if keyboard.is_pressed("esc"):
-            sd.stop()
-            break
-        time.sleep(0.05)
-
-
-def _to_int16(arr: np.ndarray) -> np.ndarray:
-    """Возвращает массив *exactly* np.int16.
-
-    Если на входе float*/int* другого размера — конвертирует с масштабированием.
-    """
-    if arr.dtype == np.int16:
-        return arr
-    if arr.dtype.kind == "f":  # float‑массив в диапазоне [‑1 … 1]
-        arr = np.clip(arr * 32767.0, -32768, 32767)
-        return arr.astype(np.int16)
-    # всё остальное → через astype
-    return arr.astype(np.int16, copy=False)
-
-
-def _chunk_to_ndarray(chunk) -> np.ndarray:
-    """Извлекает PCM из разных форматов (bytes/array/AudioChunk/…) в np.int16."""
-    # 1. Готовый np.ndarray
-    if isinstance(chunk, np.ndarray):
-        return _to_int16(chunk)
-
-    # 2. bytes/bytearray/memoryview (уже int16‑поток)
-    if isinstance(chunk, (bytes, bytearray, memoryview)):
-        return np.frombuffer(chunk, dtype=np.int16)
-
-    # 3. AudioChunk: ищем массивы внутри объекта
-    for name in dir(chunk):
-        if name.startswith("_"):
-            continue
-        try:
-            val = getattr(chunk, name)
-        except Exception:
-            continue
-        if isinstance(val, array.array):
-            if val.typecode in ("h", "H"):
-                return np.frombuffer(val, dtype=np.int16)
-            return np.asarray(val, dtype=np.int16)
-        if isinstance(val, np.ndarray):
-            return _to_int16(val)
-        if isinstance(val, (bytes, bytearray, memoryview)):
-            return np.frombuffer(val, dtype=np.int16)
-        if isinstance(val, (list, tuple)) and val and isinstance(val[0], (int, float)):
-            return np.asarray(val, dtype=np.int16)
-
-    # 4. Итерабельный из чисел
-    try:
-        return np.asarray(list(chunk), dtype=np.int16)
-    except Exception:
-        pass
-
-    # 5. Не удалось распознать → тишина
-    return np.zeros(0, dtype=np.int16)
-
-
-# ─────────────────────── 2a. SPLITTING ─────────────────────────────
+# ────────────────────────── 3. HELPERS ────────────────────────────
 _SENTENCE_RE = re.compile(r"(?<=[.!?…])\s+")
 
-
-def _split_by_sentences(text: str, max_len: int = 180) -> Iterable[str]:
-    """Разбивает *text* на части ≤ *max_len* символов, но только по границам предложений.
-    Предложения детектируются простым регэкспом: после любой из [. ! ? …] и затем пробела.
-    """
+def _split_by_sentences(text: str, max_len: int = MAX_CHARS) -> Iterable[str]:
+    """Yield *chunks* of text ≤ *max_len*, split on sentence boundaries."""
     sentences = _SENTENCE_RE.split(text)
-    chunk = ""
+    chunk: str = ""
     for sent in sentences:
         if not sent:
             continue
         if len(chunk) + len(sent) + 1 <= max_len:
-            chunk = (chunk + " " + sent).strip()
+            chunk = f"{chunk} {sent}".strip()
         else:
             if chunk:
                 yield chunk
@@ -135,49 +67,134 @@ def _split_by_sentences(text: str, max_len: int = 180) -> Iterable[str]:
     if chunk:
         yield chunk
 
+def _to_int16(arr: np.ndarray) -> np.ndarray:  # noqa: N802 (library helper)
+    """Ensure ndarray is exactly int16."""
+    if arr.dtype == np.int16:
+        return arr
+    if arr.dtype.kind == "f":  # float32/64 in [-1..1]
+        arr = np.clip(arr * 32767.0, -32768, 32767)
+        return arr.astype(np.int16)
+    return arr.astype(np.int16, copy=False)
 
-# ───────────────────── 3. SYNTHESIS BACKEND ───────────────────────
+def _chunk_to_ndarray(chunk) -> np.ndarray:
+    """Extract PCM int16 from any Piper iterator chunk."""
+    if isinstance(chunk, np.ndarray):
+        return _to_int16(chunk)
+    if isinstance(chunk, (bytes, bytearray, memoryview)):
+        return np.frombuffer(chunk, dtype=np.int16)
+    for name in dir(chunk):
+        if name.startswith("_"):
+            continue
+        try:
+            val = getattr(chunk, name)
+        except Exception:
+            continue
+        if isinstance(val, _array.array):
+            return np.frombuffer(val, dtype=np.int16)
+        if isinstance(val, np.ndarray):
+            return _to_int16(val)
+        if isinstance(val, (bytes, bytearray, memoryview)):
+            return np.frombuffer(val, dtype=np.int16)
+        if isinstance(val, (list, tuple)) and val and isinstance(val[0], (int, float)):
+            return np.asarray(val, dtype=np.int16)
+    try:
+        return np.asarray(list(chunk), dtype=np.int16)
+    except Exception:
+        return np.zeros(0, dtype=np.int16)
 
 def _synthesize(text: str) -> np.ndarray:
-    """Возвращает аудио int16 одним массивом независимо от версии piper‑tts."""
-    if _SIG_HAS_AUDIO_STREAMING:
-        # >= 1.3: можно сразу получить весь трек
-        audio = VOICE.synthesize(text, audio_streaming=False)
-        return _to_int16(audio)
+    """Return single int16 array for *text* regardless of Piper version."""
+    if not text:
+        return np.zeros(0, dtype=np.int16)
 
-    # 1.2.x: только поток → собираем вручную
-    frames = (_chunk_to_ndarray(chunk) for chunk in VOICE.synthesize(text))
-    audio = np.concatenate(list(frames)) if text else np.zeros(0, dtype=np.int16)
-    return audio
+    if _SIG_HAS_AUDIO_STREAMING:  # piper‑tts ≥ 1.3
+        return _to_int16(VOICE.synthesize(text, audio_streaming=False))
+
+    # piper‑tts 1.2.x — stream, need to concat
+    frames = (_chunk_to_ndarray(c) for c in VOICE.synthesize(text))
+    return np.concatenate(list(frames))
+
+def _ndarray_to_float32(audio: np.ndarray) -> np.ndarray:
+    return audio.astype(np.float32, copy=False) / 32767.0 if audio.size else audio
+
+# ────────────────────────── 4. PUBLIC API ─────────────────────────
+
+def _save_wav(path: str, pcm_i16: np.ndarray) -> None:
+    """Пишет mono-PCM-16 bit в .wav (для отладки)."""
+    with wave.open(path, "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)              # 16-bit
+        wf.setframerate(SAMPLE_RATE)
+        wf.writeframes(pcm_i16.tobytes())
+    log.info("WAV-debug: saved %s (%.2f s)", path, pcm_i16.size / SAMPLE_RATE)
 
 
-# ─────────────────────── 4. MAIN ENTRY ────────────────────────────
+def working_tts(
+    text: str,
+    *,
+    max_chars: int = MAX_CHARS,
+    save_wav: str | None = None,        # ← новый арг.
+) -> None:
+    """Озвучивает *text*; при *save_wav* пишет итоговый WAV-файл."""
+    norm = translit(remove_spaces_in_numbers(numbers_to_wards(text)), "ru")
+    log.info("Speak %d chars", len(norm))
 
-def working_tts(text: str):
-    """Озвучивает *text*, разбивая по 180 символов (граница — конец предложения)."""
-    # 4.1 нормализация текста
-    text = translit(remove_spaces_in_numbers(numbers_to_wards(text)), "ru")
-    print(f"[TTS] {text}")
-    # 4.2 синтез + воспроизведение по частям
-    for idx, chunk in enumerate(_split_by_sentences(text, 180), 1):
-        # ───── генерация ─────
-        t_gen_start = time.perf_counter()
-        audio = _synthesize(chunk)
-        t_gen = time.perf_counter() - t_gen_start
-        if not audio.size:
-            continue  # иногда piper возвращает пустой массив
+    parts: list[np.ndarray] = []        # накапливаем для WAV
 
-        # piper выдаёт int16; а sd.play охотнее играет float32
-        audio_f32 = audio.astype(np.float32) / 32767.0
+    for i, chunk in enumerate(_split_by_sentences(norm, max_chars), 1):
+        t0 = time.perf_counter()
+        pcm_i16 = _synthesize(chunk)           # int16 от Piper
+        t_gen = time.perf_counter() - t0
+        if not pcm_i16.size:
+            log.warning("Part %d: empty audio", i)
+            continue
 
-        # ───── воспроизведение ─────
-        t_play_start = time.perf_counter()
-        sd.play(audio_f32, _SAMPLE_RATE)
-        _wait_until_play_done()
-        sd.stop()
-        t_play = time.perf_counter() - t_play_start
+        parts.append(pcm_i16)                  # до «хвоста»!
 
-        # DEBUG‑лог
-        print(
-            f"[TTS] gen {t_gen:.2f}s  play {t_play:.2f}s  part {idx}  max={int(audio.max())} min={int(audio.min())} len={len(audio)}"
+        # ── добавляем тишину и сразу в float32 ──────────────────
+        tail = np.zeros(int(SAMPLE_RATE * TAIL_PAD_SEC), np.int16)
+        pcm_i16_pad = np.concatenate([pcm_i16, tail])
+        audio_f32 = pcm_i16_pad.astype(np.float32) / 32767.0
+
+        # ── воспроизведение (без sd.stop!) ──────────────────────
+        t1 = time.perf_counter()
+        sd.play(audio_f32, SAMPLE_RATE)
+        t_play = time.perf_counter() - t1
+
+        rms = float(np.sqrt(np.mean(audio_f32 ** 2)))
+        log.info(
+            "part %2d | gen %.2fs | play %.2fs | len %6d | rms %.3f",
+            i, t_gen, t_play, pcm_i16.size, rms,
         )
+
+    # ── запись WAV, если просили ───────────────────────────────
+    if save_wav:
+        _save_wav(save_wav, np.concatenate(parts) if parts else np.zeros(0, np.int16))
+
+# ────────────────────────── 5. ASYNC WRAPPER ─────────────────────
+
+async def speak_async(text: str, *, loop: asyncio.AbstractEventLoop | None = None) -> None:  # type: ignore[name-defined]
+    """Async helper: run `working_tts` in executor to avoid blocking."""
+    global in_tts
+    in_tts = True
+    import asyncio  # local to avoid unconditional asyncio import in sync context
+    try:
+        loop = loop or asyncio.get_running_loop()
+        await loop.run_in_executor(None, working_tts, text)
+    finally:
+        in_tts = False
+
+# ────────────────────────── 6. CLI TEST ──────────────────────────
+
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Test Piper‑TTS playback")
+    parser.add_argument("text", nargs="*", help="Text to speak")
+    parser.add_argument("--chars", "-c", type=int, default=MAX_CHARS, help="Chunk size")
+    args = parser.parse_args()
+
+    if args.text:
+        working_tts(" ".join(args.text), max_chars=args.chars)
+    else:
+        working_tts("Привет! Я Джарвис, ваш голосовой ассистент.")
