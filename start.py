@@ -11,7 +11,7 @@ from typing import Any, Dict, List
 
 import vosk
 import yaml
-from mic_adapter import get_mic_stream
+from pvrecorder import PvRecorder
 from rapidfuzz import fuzz
 
 from display import get_driver, init_driver
@@ -116,7 +116,8 @@ async def main(_conn=None):
     # 2. Speech recogniser
     model = vosk.Model('models/model_small')
     kaldi = vosk.KaldiRecognizer(model, 16000)
-
+    recorder = PvRecorder(device_index=mic_idx, frame_length=512)
+    recorder.start()
 
     # 3. Приветственное сообщение (не блокирует)
     await speak_async("Джарвис запущен")
@@ -133,17 +134,21 @@ async def main(_conn=None):
 
     log.info("Произнесите ключевую фразу: %s", ", ".join(VA_ALIAS))
 
-    async for raw_data in get_mic_stream():
-        pcm = raw_data
+    while True:
+        raw_data = recorder.read()
+        pcm = array.array('h', raw_data).tobytes()
+
         # Слушаем команду
         if listening:
             if kaldi.AcceptWaveform(pcm):
                 result = json.loads(kaldi.Result()).get('text', '')
                 if result:
                     log.info("[CMD] %s", result)
+                    recorder.stop()
                     broker.publish("user_query_started")
                     await va_respond(result)
                     broker.publish("user_query_ended")
+                    recorder.start()
                     kaldi.Reset()
             continue
 
